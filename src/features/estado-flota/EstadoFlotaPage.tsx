@@ -40,7 +40,7 @@ export const EstadoFlotaPage = () => {
     [],
   );
 
-  const exportColumns = columns.map((col) => ({ key: col.key, header: col.header, value: (row: VehiculoViewModel) => (col.value ? col.value(row) : (row as Record<string, unknown>)[col.key]) }));
+  const exportColumns = columns.map((col) => ({ key: col.key, header: col.header, value: (row: VehiculoViewModel) => (col.value ? col.value(row) : (row as unknown as Record<string, unknown>)[col.key]) }));
 
   const handleExportView = () => {
     exportToXlsx({ filename: 'flota_vista', sheetName: 'Flota', rows: vehicles, columns: exportColumns });

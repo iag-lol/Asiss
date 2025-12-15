@@ -34,7 +34,7 @@ export const AsistenciaPage = () => {
     [],
   );
 
-  const exportColumns = columns.map((col) => ({ key: col.key, header: col.header, value: (row: AsistenciaViewModel) => (col.value ? col.value(row) : (row as Record<string, unknown>)[col.key]) }));
+  const exportColumns = columns.map((col) => ({ key: col.key, header: col.header, value: (row: AsistenciaViewModel) => (col.value ? col.value(row) : (row as unknown as Record<string, unknown>)[col.key]) }));
 
   const handleExportView = () => {
     if (!query.data) return;

@@ -3,7 +3,7 @@ import * as XLSX from 'xlsx';
 export interface ExportColumn<T> {
   key: string;
   header: string;
-  value?: (row: T) => string | number | boolean | null | undefined;
+  value?: (row: T) => string | number | boolean | null | undefined | unknown;
 }
 
 export interface ExportToXlsxInput<T> {

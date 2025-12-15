@@ -40,7 +40,7 @@ export const DataTable = <T,>({ columns, rows, emptyMessage = 'Sin resultados' }
               <tr key={idx} className="hover:bg-slate-50">
                 {columns.map((col) => (
                   <td key={col.key} className="whitespace-nowrap px-4 py-3 text-sm text-slate-800">
-                    {col.render ? col.render(row) : (row as Record<string, unknown>)[col.key]}
+                    {col.render ? col.render(row) : (row as Record<string, unknown>)[col.key] as ReactNode}
                   </td>
                 ))}
               </tr>

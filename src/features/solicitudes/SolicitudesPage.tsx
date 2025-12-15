@@ -42,7 +42,7 @@ export const SolicitudesPage = () => {
     [],
   );
 
-  const exportColumns = columns.map((col) => ({ key: col.key, header: col.header, value: (row: SolicitudViewModel) => (col.value ? col.value(row) : (row as Record<string, unknown>)[col.key]) }));
+  const exportColumns = columns.map((col) => ({ key: col.key, header: col.header, value: (row: SolicitudViewModel) => (col.value ? col.value(row) : (row as unknown as Record<string, unknown>)[col.key]) }));
 
   const handleExportView = () => {
     exportToXlsx({ filename: 'solicitudes_vista', sheetName: 'Solicitudes', rows: data, columns: exportColumns });

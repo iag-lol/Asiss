@@ -56,7 +56,7 @@ export const PersonalPage = () => {
       columns.map((col) => ({
         key: col.key,
         header: col.header,
-        value: (row: PersonalViewModel) => (col.value ? col.value(row) : (row as Record<string, string>)[col.key]),
+        value: (row: PersonalViewModel) => (col.value ? col.value(row) : (row as unknown as Record<string, string>)[col.key]),
       })),
     [columns],
   );

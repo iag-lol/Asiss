@@ -11,5 +11,5 @@ export interface EmailPayload {
 }
 
 export interface EmailService {
-  sendEmail: (payload: EmailPayload) => Promise<{ accepted: boolean; messageId: string };
+  sendEmail: (payload: EmailPayload) => Promise<{ accepted: boolean; messageId: string }>;
 }
