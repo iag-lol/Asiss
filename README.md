@@ -20,6 +20,11 @@ Variables de entorno (futuras conexiones):
 ```
 VITE_SUPABASE_URL=
 VITE_SUPABASE_ANON_KEY=
+VITE_EMAIL_API_URL=
+RESEND_API_KEY=
+RESEND_FROM=notificaciones@asiss.online
+RESEND_FALLBACK_TO=tu@correo.com,otro@correo.com
+RESEND_BRAND_URL=https://asiss.online
 ```
 
 ## Arquitectura
@@ -48,8 +53,15 @@ Utilidad genérica `exportToXlsx({ filename, sheetName, rows, columns })` en `sr
 ### Notificaciones realtime (estructura)
 Interfaces en `shared/types/notification.ts` y mock provider en `shared/services/notificationService.ts`. `NotificationCenter` se suscribe y muestra badge + dropdown + toast. Listo para reemplazar publish/subscribe por Supabase Realtime.
 
-### Correo interno (mock)
-Formulario en `features/informativos/InformativosPage.tsx` que llama a `emailService.sendEmail(payload)`; preparado para conectarse a una Edge Function.
+### Correo interno (Resend)
+Formulario en `features/informativos/InformativosPage.tsx` usa `emailService.sendEmail(payload)` contra `VITE_EMAIL_API_URL` (por defecto `/functions/v1/send-email`). Incluye función Edge Supabase en `supabase/functions/send-email` que usa Resend con template responsivo premium.
+
+Para habilitar envíos reales:
+1. Añade al `.env.local` las claves de arriba (usa tu API key de Resend; no la expongas en el frontend).
+2. `RESEND_FROM` debe ser una casilla verificada en el dominio `asiss.online`.
+3. `RESEND_FALLBACK_TO` define destinatarios por defecto (coma).
+4. Ejecuta la función localmente con Supabase CLI: `supabase functions serve send-email --env-file .env.local`.
+5. En producción, publica la función y configura `VITE_EMAIL_API_URL` a la URL de la función (ej. `https://<project>.functions.supabase.co/send-email`).
 
 ## Agregar una nueva sección
 1. Crear carpeta en `src/features/nueva-seccion` con `types.ts` y `service.ts` (adapter con `list(params)` siguiendo `ListAdapter`).

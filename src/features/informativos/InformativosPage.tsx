@@ -29,6 +29,7 @@ export const InformativosPage = () => {
   const [body, setBody] = useState('');
   const [sending, setSending] = useState(false);
   const [sentMessage, setSentMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
 
   const query = useQuery({
     queryKey: ['informativos', terminalContext, filters],
@@ -59,18 +60,25 @@ export const InformativosPage = () => {
   };
 
   const handleSendEmail = async () => {
+    setErrorMessage('');
     setSending(true);
-    const response = await emailService.sendEmail({
-      audience,
-      terminalCodes: audience === 'por_terminal' ? [emailTerminal] : undefined,
-      manualRecipients: audience === 'manual' ? manualRecipients.split(',').map((item) => item.trim()) : undefined,
-      subject,
-      body,
-    });
-    setSending(false);
-    setSentMessage(`Correo simulado con id ${response.messageId}`);
-    setSubject('');
-    setBody('');
+    try {
+      const response = await emailService.sendEmail({
+        audience,
+        terminalCodes: audience === 'por_terminal' ? [emailTerminal] : undefined,
+        manualRecipients: audience === 'manual' ? manualRecipients.split(',').map((item) => item.trim()).filter(Boolean) : undefined,
+        subject,
+        body,
+      });
+      setSentMessage(`Correo enviado (${response.messageId})`);
+      setSubject('');
+      setBody('');
+      setManualRecipients('');
+    } catch (error) {
+      setErrorMessage((error as Error).message);
+    } finally {
+      setSending(false);
+    }
   };
 
   return (
@@ -116,7 +124,10 @@ export const InformativosPage = () => {
             <p className="text-base font-semibold text-slate-900">Enviar correo interno</p>
             <p className="text-sm text-slate-600">Módulo preparado para conectar a Edge Function.</p>
           </div>
-          {sentMessage && <span className="badge">{sentMessage}</span>}
+          <div className="flex flex-col items-end gap-1 text-right">
+            {sentMessage && <span className="badge">{sentMessage}</span>}
+            {errorMessage && <span className="text-xs font-semibold text-red-600">{errorMessage}</span>}
+          </div>
         </div>
         <div className="grid gap-3 md:grid-cols-3">
           <div className="space-y-1">
