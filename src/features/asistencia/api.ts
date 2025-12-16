@@ -508,17 +508,62 @@ import { displayTerminal } from '../../shared/utils/terminal';
 
 const EMAIL_RECIPIENT = 'isaac.avila@transdev.cl';
 
+// SVG Icons for emails (inline SVG is the most reliable for email clients)
+const SVG_ICONS = {
+    check: `<svg width="56" height="56" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="28" cy="28" r="26" fill="#dcfce7" stroke="#22c55e" stroke-width="3"/>
+        <path d="M18 28L24 34L38 20" stroke="#16a34a" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>`,
+    x: `<svg width="56" height="56" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="28" cy="28" r="26" fill="#fee2e2" stroke="#ef4444" stroke-width="3"/>
+        <path d="M20 20L36 36M36 20L20 36" stroke="#dc2626" stroke-width="4" stroke-linecap="round"/>
+    </svg>`,
+    clock: `<svg width="56" height="56" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="28" cy="28" r="26" fill="#fef3c7" stroke="#f59e0b" stroke-width="3"/>
+        <circle cx="28" cy="28" r="3" fill="#d97706"/>
+        <path d="M28 16V28L36 33" stroke="#d97706" stroke-width="3" stroke-linecap="round"/>
+    </svg>`,
+    user: `<svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="9" cy="5" r="3.5" stroke="#64748b" stroke-width="1.5"/>
+        <path d="M2 16C2 12.686 5.13401 10 9 10C12.866 10 16 12.686 16 16" stroke="#64748b" stroke-width="1.5" stroke-linecap="round"/>
+    </svg>`,
+    id: `<svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="1.5" y="3.5" width="15" height="11" rx="2" stroke="#64748b" stroke-width="1.5"/>
+        <circle cx="6" cy="8" r="1.5" stroke="#64748b" stroke-width="1"/>
+        <path d="M4 12C4 10.8954 4.89543 10 6 10C7.10457 10 8 10.8954 8 12" stroke="#64748b" stroke-width="1"/>
+        <path d="M10.5 7.5H14.5M10.5 10H13" stroke="#64748b" stroke-width="1.2" stroke-linecap="round"/>
+    </svg>`,
+    building: `<svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M2 16V3.5C2 3.22386 2.22386 3 2.5 3H9.5C9.77614 3 10 3.22386 10 3.5V16" stroke="#64748b" stroke-width="1.5"/>
+        <path d="M10 7H14.5C14.7761 7 15 7.22386 15 7.5V16" stroke="#64748b" stroke-width="1.5"/>
+        <path d="M5 6H7M5 9H7M5 12H7M12 10H13M12 13H13" stroke="#64748b" stroke-width="1.2" stroke-linecap="round"/>
+        <path d="M1 16H17" stroke="#64748b" stroke-width="1.5" stroke-linecap="round"/>
+    </svg>`,
+    calendar: `<svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="2" y="3.5" width="14" height="12" rx="2" stroke="#64748b" stroke-width="1.5"/>
+        <path d="M2 7H16" stroke="#64748b" stroke-width="1.5"/>
+        <path d="M5.5 1.5V4.5M12.5 1.5V4.5" stroke="#64748b" stroke-width="1.5" stroke-linecap="round"/>
+    </svg>`,
+};
+
 const formatDate = (date: string) => {
     const d = new Date(date + 'T12:00:00');
     return d.toLocaleDateString('es-CL', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 };
 
-const generateDataRow = (label: string, value: string, highlight = false) => `
+const generateDataRow = (icon: string, label: string, value: string, highlight = false) => `
     <tr>
-        <td style="padding: 14px 16px; background: #f8fafc; border-radius: 8px 0 0 8px; font-size: 13px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; width: 140px;">${label}</td>
-        <td style="padding: 14px 16px; background: #f8fafc; border-radius: 0 8px 8px 0; font-size: 15px; font-weight: ${highlight ? '700' : '500'}; color: ${highlight ? '#1e40af' : '#1e293b'};">${value}</td>
+        <td style="padding: 16px; background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); border-radius: 12px 0 0 12px; vertical-align: middle; width: 160px;">
+            <table role="presentation" cellspacing="0" cellpadding="0" border="0">
+                <tr>
+                    <td style="padding-right: 10px; vertical-align: middle;">${icon}</td>
+                    <td style="font-size: 12px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">${label}</td>
+                </tr>
+            </table>
+        </td>
+        <td style="padding: 16px; background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); border-radius: 0 12px 12px 0; font-size: 15px; font-weight: ${highlight ? '700' : '500'}; color: ${highlight ? '#1e40af' : '#1e293b'};">${value}</td>
     </tr>
-    <tr><td colspan="2" style="height: 8px;"></td></tr>
+    <tr><td colspan="2" style="height: 10px;"></td></tr>
 `;
 
 export const sendAuthorizationEmail = async (
@@ -533,26 +578,45 @@ export const sendAuthorizationEmail = async (
     const isApproved = type === 'AUTORIZADO';
     const statusColor = isApproved ? '#16a34a' : '#dc2626';
     const statusBg = isApproved ? 'linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%)' : 'linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)';
-    const statusBorder = isApproved ? '#86efac' : '#fca5a5';
+    const statusBorder = isApproved ? '#22c55e' : '#ef4444';
+    const statusIcon = isApproved ? SVG_ICONS.check : SVG_ICONS.x;
 
-    const subject = `${isApproved ? '✓' : '✗'} ${subsection} ${type} - ${nombre}`;
+    const subject = `${subsection} ${type} - ${nombre}`;
     const body = `
-        <div style="margin-bottom: 24px;">
-            <div style="background: ${statusBg}; border: 2px solid ${statusBorder}; border-radius: 16px; padding: 24px; text-align: center; margin-bottom: 24px;">
-                <div style="font-size: 48px; margin-bottom: 8px;">${isApproved ? '✓' : '✗'}</div>
-                <div style="font-size: 12px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 4px;">Estado</div>
-                <div style="font-size: 24px; font-weight: 800; color: ${statusColor};">${type}</div>
-            </div>
-            
-            <table style="width: 100%; border-collapse: separate; border-spacing: 0;">
-                ${generateDataRow('Subsección', subsection, true)}
-                ${generateDataRow('RUT', rut)}
-                ${generateDataRow('Trabajador', nombre)}
-                ${generateDataRow('Terminal', displayTerminal(terminal as any))}
-                ${generateDataRow('Fecha', formatDate(date))}
-                ${reason ? generateDataRow('Motivo Rechazo', reason, true) : ''}
-            </table>
-        </div>
+        <!-- Status Banner -->
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin-bottom: 24px;">
+            <tr>
+                <td style="background: ${statusBg}; border: 3px solid ${statusBorder}; border-radius: 20px; padding: 32px; text-align: center;">
+                    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+                        <tr>
+                            <td align="center" style="padding-bottom: 12px;">
+                                ${statusIcon}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td align="center" style="padding-bottom: 8px;">
+                                <span style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 2px;">Estado del Registro</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td align="center">
+                                <span style="font-size: 28px; font-weight: 800; color: ${statusColor}; letter-spacing: 1px;">${type}</span>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+        
+        <!-- Data Table -->
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+            ${generateDataRow(SVG_ICONS.id, 'Subsección', subsection, true)}
+            ${generateDataRow(SVG_ICONS.id, 'RUT', rut)}
+            ${generateDataRow(SVG_ICONS.user, 'Trabajador', nombre)}
+            ${generateDataRow(SVG_ICONS.building, 'Terminal', displayTerminal(terminal as any))}
+            ${generateDataRow(SVG_ICONS.calendar, 'Fecha', formatDate(date))}
+            ${reason ? generateDataRow(SVG_ICONS.id, 'Motivo', reason, true) : ''}
+        </table>
     `.trim();
 
     try {
@@ -581,45 +645,73 @@ export const sendRecordCreatedEmail = async (
     const detailsRows = data.details
         ? Object.entries(data.details)
             .filter(([_, v]) => v && v.trim())
-            .map(([k, v]) => generateDataRow(k, v))
+            .map(([k, v]) => generateDataRow(SVG_ICONS.id, k, v))
             .join('')
         : '';
 
     const subject = `Nuevo Registro: ${subsection} - ${data.nombre}`;
     const body = `
-        <div style="margin-bottom: 24px;">
-            <!-- Status Banner -->
-            <div style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border: 2px solid #fbbf24; border-radius: 16px; padding: 20px; text-align: center; margin-bottom: 24px;">
-                <div style="font-size: 36px; margin-bottom: 8px;">⏳</div>
-                <div style="font-size: 11px; font-weight: 700; color: #92400e; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 4px;">Estado Actual</div>
-                <div style="font-size: 20px; font-weight: 800; color: #78350f;">PENDIENTE DE AUTORIZACIÓN</div>
-            </div>
-            
-            <!-- Badge -->
-            <div style="text-align: center; margin-bottom: 24px;">
-                <span style="display: inline-block; padding: 8px 20px; background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); border-radius: 50px; color: white; font-size: 13px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;">${subsection}</span>
-            </div>
-            
-            <!-- Main Data -->
-            <table style="width: 100%; border-collapse: separate; border-spacing: 0;">
-                ${generateDataRow('RUT', data.rut)}
-                ${generateDataRow('Trabajador', data.nombre, true)}
-                ${generateDataRow('Terminal', displayTerminal(data.terminal as any))}
-                ${generateDataRow('Fecha', formatDate(data.date))}
-                ${detailsRows}
-            </table>
-            
-            <!-- Registrado Por -->
-            <div style="margin-top: 24px; padding: 20px; background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border-radius: 12px; border: 1px solid #93c5fd;">
-                <div style="display: flex; align-items: center; gap: 12px;">
-                    <div style="width: 44px; height: 44px; background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 800; font-size: 18px;">${data.createdBy.charAt(0)}</div>
-                    <div>
-                        <div style="font-size: 12px; color: #3b82f6; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">Registrado por</div>
-                        <div style="font-size: 16px; font-weight: 700; color: #1e40af;">${data.createdBy}</div>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <!-- Status Banner -->
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin-bottom: 24px;">
+            <tr>
+                <td style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border: 3px solid #f59e0b; border-radius: 20px; padding: 32px; text-align: center;">
+                    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+                        <tr>
+                            <td align="center" style="padding-bottom: 12px;">
+                                ${SVG_ICONS.clock}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td align="center" style="padding-bottom: 8px;">
+                                <span style="font-size: 11px; font-weight: 700; color: #92400e; text-transform: uppercase; letter-spacing: 2px;">Estado del Registro</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td align="center">
+                                <span style="font-size: 22px; font-weight: 800; color: #78350f; letter-spacing: 1px;">PENDIENTE DE AUTORIZACIÓN</span>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+        
+        <!-- Subsection Badge -->
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin-bottom: 24px;">
+            <tr>
+                <td align="center">
+                    <span style="display: inline-block; padding: 10px 28px; background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); border-radius: 100px; color: white; font-size: 13px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; box-shadow: 0 4px 14px rgba(59, 130, 246, 0.4);">${subsection}</span>
+                </td>
+            </tr>
+        </table>
+        
+        <!-- Data Table -->
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+            ${generateDataRow(SVG_ICONS.id, 'RUT', data.rut)}
+            ${generateDataRow(SVG_ICONS.user, 'Trabajador', data.nombre, true)}
+            ${generateDataRow(SVG_ICONS.building, 'Terminal', displayTerminal(data.terminal as any))}
+            ${generateDataRow(SVG_ICONS.calendar, 'Fecha', formatDate(data.date))}
+            ${detailsRows}
+        </table>
+        
+        <!-- Registered By -->
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin-top: 24px;">
+            <tr>
+                <td style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border: 2px solid #93c5fd; border-radius: 16px; padding: 20px;">
+                    <table role="presentation" cellspacing="0" cellpadding="0" border="0">
+                        <tr>
+                            <td style="padding-right: 16px; vertical-align: middle;">
+                                <div style="width: 52px; height: 52px; background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); border-radius: 50%; text-align: center; line-height: 52px; color: white; font-weight: 800; font-size: 22px; box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3);">${data.createdBy.charAt(0)}</div>
+                            </td>
+                            <td style="vertical-align: middle;">
+                                <span style="display: block; font-size: 11px; color: #3b82f6; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 4px;">Registrado por</span>
+                                <span style="display: block; font-size: 18px; font-weight: 700; color: #1e40af;">${data.createdBy}</span>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
     `.trim();
 
     try {
@@ -633,4 +725,3 @@ export const sendRecordCreatedEmail = async (
         console.error('Error sending record created email:', err);
     }
 };
-
