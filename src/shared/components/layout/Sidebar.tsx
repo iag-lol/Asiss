@@ -90,9 +90,9 @@ export const Sidebar = ({ isOpen, onClose }: Props) => {
       {/* Sidebar */}
       <aside
         className={`${isOpen ? 'translate-x-0' : '-translate-x-full'
-          } fixed inset-y-0 left-0 z-50 w-72 transform transition-transform duration-300 ease-out md:static md:z-auto md:w-72 md:translate-x-0`}
+          } fixed inset-y-0 left-0 z-50 w-72 transform transition-transform duration-300 ease-out md:translate-x-0`}
       >
-        <div className="flex h-full flex-col bg-gradient-to-b from-dark-800 to-dark-900 shadow-2xl">
+        <div className="flex h-full flex-col bg-gradient-to-b from-dark-800 to-dark-900">
           {/* Logo */}
           <div className="flex items-center gap-3 px-6 py-5 border-b border-white/10">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-brand-500 to-brand-700 shadow-brand">
@@ -122,14 +122,14 @@ export const Sidebar = ({ isOpen, onClose }: Props) => {
                   <button
                     onClick={() => toggleSection(section.label)}
                     className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group ${isActive
-                        ? 'bg-white/10 text-white'
-                        : 'text-slate-400 hover:bg-white/5 hover:text-slate-200'
+                      ? 'bg-white/10 text-white'
+                      : 'text-slate-400 hover:bg-white/5 hover:text-slate-200'
                       }`}
                   >
                     <div
                       className={`flex h-8 w-8 items-center justify-center rounded-lg transition-all duration-200 ${isActive
-                          ? 'bg-gradient-to-br from-brand-500 to-brand-600 text-white shadow-brand'
-                          : 'bg-white/5 text-slate-400 group-hover:bg-white/10 group-hover:text-slate-200'
+                        ? 'bg-gradient-to-br from-brand-500 to-brand-600 text-white shadow-brand'
+                        : 'bg-white/5 text-slate-400 group-hover:bg-white/10 group-hover:text-slate-200'
                         }`}
                     >
                       <Icon name={section.icon} size={18} />
