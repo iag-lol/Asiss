@@ -274,8 +274,9 @@ export const createCambioDia = async (
             .upload(filePath, values.document);
 
         if (uploadError) {
+            console.error('Storage Upload Error Detail:', uploadError);
             showErrorToast('Error al subir documento', 'Verifica que el archivo sea imagen o PDF y menor a 5MB');
-            throw new Error('Error al subir documento');
+            throw new Error(`Error al subir documento: ${uploadError.message}`);
         }
         documentPath = filePath;
     }
