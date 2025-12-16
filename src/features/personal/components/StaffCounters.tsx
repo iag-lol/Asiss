@@ -2,21 +2,21 @@ import { useStaffCounts } from '../hooks';
 import { TerminalContext } from '../../../shared/types/terminal';
 import { STAFF_CARGOS, StaffCargo } from '../types';
 import { displayTerminal } from '../../../shared/utils/terminal';
-import { Icon } from '../../../shared/components/common/Icon';
+import { Icon, IconName } from '../../../shared/components/common/Icon';
 
 interface Props {
     terminalContext: TerminalContext;
 }
 
-const getCargoIcon = (cargo: StaffCargo): string => {
-    const icons: Record<StaffCargo, string> = {
-        conductor: '🚌',
-        inspector_patio: '👷',
-        cleaner: '🧹',
-        planillero: '📋',
-        supervisor: '👔',
+const getCargoIcon = (cargo: StaffCargo): IconName => {
+    const icons: Record<StaffCargo, IconName> = {
+        conductor: 'calendar',
+        inspector_patio: 'clipboard',
+        cleaner: 'check-circle',
+        planillero: 'layers',
+        supervisor: 'users',
     };
-    return icons[cargo] || '👤';
+    return icons[cargo] || 'users';
 };
 
 const getCargoLabel = (cargo: StaffCargo): string => {
@@ -71,7 +71,9 @@ export const StaffCounters = ({ terminalContext }: Props) => {
                                     }`}
                             >
                                 <div className="flex items-center gap-2 mb-2">
-                                    <span className="text-xl">{getCargoIcon(item.cargo)}</span>
+                                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100">
+                                        <Icon name={getCargoIcon(item.cargo)} size={18} className="text-slate-600" />
+                                    </div>
                                     <span className="text-xs font-semibold text-slate-600 uppercase">
                                         {getCargoLabel(item.cargo)}
                                     </span>

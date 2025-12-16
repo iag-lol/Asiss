@@ -1,88 +1,72 @@
-import { useMemo, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { PageHeader } from '../../shared/components/common/PageHeader';
-import { FiltersBar } from '../../shared/components/common/FiltersBar';
-import { DataTable, TableColumn } from '../../shared/components/common/DataTable';
-import { EmptyState } from '../../shared/components/common/EmptyState';
-import { LoadingState } from '../../shared/components/common/LoadingState';
-import { ErrorState } from '../../shared/components/common/ErrorState';
-import { ExportMenu } from '../../shared/components/common/ExportMenu';
-import { useTerminalStore } from '../../shared/state/terminalStore';
-import { asistenciaAdapter } from './service';
-import { AsistenciaFilters, AsistenciaViewModel } from './types';
-import { exportToXlsx } from '../../shared/utils/exportToXlsx';
-import { displayTerminal } from '../../shared/utils/terminal';
+import { useState } from 'react';
+import { Icon, IconName } from '../../shared/components/common/Icon';
+import { NoMarcacionesPage } from './pages/NoMarcacionesPage';
+import { AttendanceSubsection } from './types';
+
+const TABS: { id: AttendanceSubsection; label: string; icon: IconName }[] = [
+  { id: 'no-marcaciones', label: 'No Marcaciones', icon: 'clock' },
+  { id: 'sin-credenciales', label: 'Sin Credenciales', icon: 'key' },
+  { id: 'cambios-dia', label: 'Cambios de Día', icon: 'calendar' },
+  { id: 'autorizaciones', label: 'Autorizaciones', icon: 'check-circle' },
+];
 
 export const AsistenciaPage = () => {
-  const terminalContext = useTerminalStore((state) => state.context);
-  const setTerminalContext = useTerminalStore((state) => state.setContext);
-  const [filters, setFilters] = useState<AsistenciaFilters>({ estado: 'todos' });
+  const [activeTab, setActiveTab] = useState<AttendanceSubsection>('no-marcaciones');
 
-  const query = useQuery({
-    queryKey: ['asistencia', terminalContext, filters],
-    queryFn: () => asistenciaAdapter.list({ terminalContext, filters, scope: 'view' }),
-  });
-
-  const columns: TableColumn<AsistenciaViewModel>[] = useMemo(
-    () => [
-      { key: 'colaborador', header: 'Colaborador' },
-      { key: 'fecha', header: 'Fecha' },
-      { key: 'turno', header: 'Turno' },
-      { key: 'estado', header: 'Estado', render: (row) => <span className="badge capitalize">{row.estado}</span>, value: (row) => row.estado },
-      { key: 'terminal', header: 'Terminal', render: (row) => displayTerminal(row.terminal), value: (row) => displayTerminal(row.terminal) },
-    ],
-    [],
-  );
-
-  const exportColumns = columns.map((col) => ({ key: col.key, header: col.header, value: (row: AsistenciaViewModel) => (col.value ? col.value(row) : (row as unknown as Record<string, unknown>)[col.key]) }));
-
-  const handleExportView = () => {
-    if (!query.data) return;
-    exportToXlsx({ filename: 'asistencia_vista', sheetName: 'Asistencia', rows: query.data, columns: exportColumns });
-  };
-
-  const handleExportAll = async () => {
-    const rows = await asistenciaAdapter.list({ terminalContext, scope: 'all' });
-    exportToXlsx({ filename: 'asistencia_completo', sheetName: 'Asistencia', rows, columns: exportColumns });
+  const renderContent = () => {
+    switch (activeTab) {
+      case 'no-marcaciones':
+        return <NoMarcacionesPage />;
+      case 'sin-credenciales':
+        return (
+          <div className="card p-8 text-center">
+            <Icon name="key" size={48} className="mx-auto text-slate-300 mb-4" />
+            <h3 className="text-lg font-semibold text-slate-700">Sin Credenciales</h3>
+            <p className="text-slate-500 mt-2">Esta subsección usa la misma estructura que No Marcaciones.</p>
+          </div>
+        );
+      case 'cambios-dia':
+        return (
+          <div className="card p-8 text-center">
+            <Icon name="calendar" size={48} className="mx-auto text-slate-300 mb-4" />
+            <h3 className="text-lg font-semibold text-slate-700">Cambios de Día</h3>
+            <p className="text-slate-500 mt-2">Esta subsección usa la misma estructura que No Marcaciones.</p>
+          </div>
+        );
+      case 'autorizaciones':
+        return (
+          <div className="card p-8 text-center">
+            <Icon name="check-circle" size={48} className="mx-auto text-slate-300 mb-4" />
+            <h3 className="text-lg font-semibold text-slate-700">Autorizaciones</h3>
+            <p className="text-slate-500 mt-2">Esta subsección usa la misma estructura que No Marcaciones.</p>
+          </div>
+        );
+      default:
+        return null;
+    }
   };
 
   return (
-    <div className="space-y-4">
-      <PageHeader
-        title="Asistencia"
-        description="Control diario de asistencia."
-        actions={
-          <div className="flex gap-2">
-            <button className="btn btn-primary">Nuevo registro</button>
-            <ExportMenu onExportView={handleExportView} onExportAll={handleExportAll} />
-          </div>
-        }
-      />
-
-      <FiltersBar terminalContext={terminalContext} onTerminalChange={setTerminalContext}>
-        <div className="flex flex-col gap-1">
-          <label className="label">Estado</label>
-          <select
-            className="input"
-            value={filters.estado}
-            onChange={(e) => setFilters({ estado: e.target.value as AsistenciaFilters['estado'] })}
+    <div className="space-y-6">
+      {/* Tabs */}
+      <div className="flex flex-wrap gap-2 border-b border-slate-200 pb-4">
+        {TABS.map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${activeTab === tab.id
+                ? 'bg-brand-600 text-white shadow-md'
+                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+              }`}
           >
-            <option value="todos">Todos</option>
-            <option value="presente">Presente</option>
-            <option value="atraso">Atraso</option>
-            <option value="ausente">Ausente</option>
-          </select>
-        </div>
-      </FiltersBar>
+            <Icon name={tab.icon} size={18} />
+            <span className="hidden sm:inline">{tab.label}</span>
+          </button>
+        ))}
+      </div>
 
-      {query.isLoading && <LoadingState />}
-      {query.isError && <ErrorState onRetry={query.refetch} />}
-      {!query.isLoading && !query.isError && (
-        <>
-          {!query.data?.length && <EmptyState description="No hay registros" />}
-          {query.data && query.data.length > 0 && <DataTable columns={columns} rows={query.data} />}
-        </>
-      )}
+      {/* Content */}
+      {renderContent()}
     </div>
   );
 };
