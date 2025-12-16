@@ -2,6 +2,7 @@ import { supabase, isSupabaseConfigured } from '../../shared/lib/supabaseClient'
 import { TerminalCode, TerminalContext } from '../../shared/types/terminal';
 import { resolveTerminalsForContext } from '../../shared/utils/terminal';
 import { normalizeName } from './utils/authorizers';
+import { showSuccessToast, showErrorToast } from '../../shared/state/toastStore';
 import {
     NoMarcacion,
     NoMarcacionFormValues,
@@ -79,22 +80,38 @@ export const createNoMarcacion = async (
         .select()
         .single();
 
-    if (error) throw error;
+    if (error) {
+        showErrorToast('Error al crear registro', 'No se pudo guardar el registro de No Marcación');
+        throw error;
+    }
 
     // Send email notification
-    sendRecordCreatedEmail('No Marcaciones', {
-        rut: values.rut,
-        nombre: values.nombre,
-        terminal: values.terminal_code,
-        date: values.date,
-        createdBy: createdBy,
-        details: {
-            'Área': values.area || '',
-            'Cargo': values.cargo || '',
-            'Jefe Terminal': values.jefe_terminal || '',
-            'Observaciones': values.observations || '',
-        }
-    });
+    try {
+        await sendRecordCreatedEmail('No Marcaciones', {
+            rut: values.rut,
+            nombre: values.nombre,
+            terminal: values.terminal_code,
+            date: values.date,
+            createdBy: createdBy,
+            details: {
+                'Área': values.area || '',
+                'Cargo': values.cargo || '',
+                'Jefe Terminal': values.jefe_terminal || '',
+                'Observaciones': values.observations || '',
+            }
+        });
+        showSuccessToast(
+            'Registro creado exitosamente',
+            `No Marcación para ${values.nombre} guardado y correo enviado`,
+            createdBy
+        );
+    } catch {
+        showSuccessToast(
+            'Registro creado',
+            `No Marcación para ${values.nombre} guardado (correo no enviado)`,
+            createdBy
+        );
+    }
 
     return data;
 };
@@ -159,22 +176,38 @@ export const createSinCredencial = async (
         .select()
         .single();
 
-    if (error) throw error;
+    if (error) {
+        showErrorToast('Error al crear registro', 'No se pudo guardar el registro de Sin Credenciales');
+        throw error;
+    }
 
     // Send email notification
-    sendRecordCreatedEmail('Sin Credenciales', {
-        rut: values.rut,
-        nombre: values.nombre,
-        terminal: values.terminal_code,
-        date: values.date,
-        createdBy: createdBy,
-        details: {
-            'Cabezal': values.cabezal || '',
-            'Horario': `${values.start_time || ''} - ${values.end_time || ''}`,
-            'Cargo': values.cargo || '',
-            'Supervisor Autoriza': values.supervisor_autoriza || '',
-        }
-    });
+    try {
+        await sendRecordCreatedEmail('Sin Credenciales', {
+            rut: values.rut,
+            nombre: values.nombre,
+            terminal: values.terminal_code,
+            date: values.date,
+            createdBy: createdBy,
+            details: {
+                'Cabezal': values.cabezal || '',
+                'Horario': `${values.start_time || ''} - ${values.end_time || ''}`,
+                'Cargo': values.cargo || '',
+                'Supervisor Autoriza': values.supervisor_autoriza || '',
+            }
+        });
+        showSuccessToast(
+            'Registro creado exitosamente',
+            `Sin Credenciales para ${values.nombre} guardado y correo enviado`,
+            createdBy
+        );
+    } catch {
+        showSuccessToast(
+            'Registro creado',
+            `Sin Credenciales para ${values.nombre} guardado (correo no enviado)`,
+            createdBy
+        );
+    }
 
     return data;
 };
@@ -256,22 +289,38 @@ export const createCambioDia = async (
         .select()
         .single();
 
-    if (error) throw error;
+    if (error) {
+        showErrorToast('Error al crear registro', 'No se pudo guardar el registro de Cambio de Día');
+        throw error;
+    }
 
     // Send email notification
-    sendRecordCreatedEmail('Cambios de Día', {
-        rut: values.rut,
-        nombre: values.nombre,
-        terminal: values.terminal_code,
-        date: values.date,
-        createdBy: createdBy,
-        details: {
-            'Jornada Programada': `${values.prog_start || ''} - ${values.prog_end || ''}`,
-            'Día No Trabaja': values.day_off_date || '',
-            'Día Trabaja': values.day_on_date || '',
-            'Documento': documentPath ? 'Sí' : 'No',
-        }
-    });
+    try {
+        await sendRecordCreatedEmail('Cambios de Día', {
+            rut: values.rut,
+            nombre: values.nombre,
+            terminal: values.terminal_code,
+            date: values.date,
+            createdBy: createdBy,
+            details: {
+                'Jornada Programada': `${values.prog_start || ''} - ${values.prog_end || ''}`,
+                'Día No Trabaja': values.day_off_date || '',
+                'Día Trabaja': values.day_on_date || '',
+                'Documento': documentPath ? 'Sí' : 'No',
+            }
+        });
+        showSuccessToast(
+            'Registro creado exitosamente',
+            `Cambio de Día para ${values.nombre} guardado y correo enviado`,
+            createdBy
+        );
+    } catch {
+        showSuccessToast(
+            'Registro creado',
+            `Cambio de Día para ${values.nombre} guardado (correo no enviado)`,
+            createdBy
+        );
+    }
 
     return data;
 };
@@ -347,22 +396,38 @@ export const createAutorizacion = async (
         .select()
         .single();
 
-    if (error) throw error;
+    if (error) {
+        showErrorToast('Error al crear registro', 'No se pudo guardar la autorización');
+        throw error;
+    }
 
     // Send email notification
-    sendRecordCreatedEmail('Autorizaciones', {
-        rut: values.rut,
-        nombre: values.nombre,
-        terminal: values.terminal_code,
-        date: values.authorization_date,
-        createdBy: createdBy,
-        details: {
-            'Tipo': values.entry_or_exit === 'ENTRADA' ? 'Llegada Tardía' : 'Retiro Anticipado',
-            'Horario': values.horario || '',
-            'Turno': values.turno || '',
-            'Motivo': values.motivo || '',
-        }
-    });
+    try {
+        await sendRecordCreatedEmail('Autorizaciones', {
+            rut: values.rut,
+            nombre: values.nombre,
+            terminal: values.terminal_code,
+            date: values.authorization_date,
+            createdBy: createdBy,
+            details: {
+                'Tipo': values.entry_or_exit === 'ENTRADA' ? 'Llegada Tardía' : 'Retiro Anticipado',
+                'Horario': values.horario || '',
+                'Turno': values.turno || '',
+                'Motivo': values.motivo || '',
+            }
+        });
+        showSuccessToast(
+            'Registro creado exitosamente',
+            `Autorización para ${values.nombre} guardada y correo enviado`,
+            createdBy
+        );
+    } catch {
+        showSuccessToast(
+            'Registro creado',
+            `Autorización para ${values.nombre} guardada (correo no enviado)`,
+            createdBy
+        );
+    }
 
     return data;
 };
