@@ -80,6 +80,22 @@ export const createNoMarcacion = async (
         .single();
 
     if (error) throw error;
+
+    // Send email notification
+    sendRecordCreatedEmail('No Marcaciones', {
+        rut: values.rut,
+        nombre: values.nombre,
+        terminal: values.terminal_code,
+        date: values.date,
+        createdBy: createdBy,
+        details: {
+            'Área': values.area || '',
+            'Cargo': values.cargo || '',
+            'Jefe Terminal': values.jefe_terminal || '',
+            'Observaciones': values.observations || '',
+        }
+    });
+
     return data;
 };
 
@@ -144,6 +160,22 @@ export const createSinCredencial = async (
         .single();
 
     if (error) throw error;
+
+    // Send email notification
+    sendRecordCreatedEmail('Sin Credenciales', {
+        rut: values.rut,
+        nombre: values.nombre,
+        terminal: values.terminal_code,
+        date: values.date,
+        createdBy: createdBy,
+        details: {
+            'Cabezal': values.cabezal || '',
+            'Horario': `${values.start_time || ''} - ${values.end_time || ''}`,
+            'Cargo': values.cargo || '',
+            'Supervisor Autoriza': values.supervisor_autoriza || '',
+        }
+    });
+
     return data;
 };
 
@@ -225,6 +257,22 @@ export const createCambioDia = async (
         .single();
 
     if (error) throw error;
+
+    // Send email notification
+    sendRecordCreatedEmail('Cambios de Día', {
+        rut: values.rut,
+        nombre: values.nombre,
+        terminal: values.terminal_code,
+        date: values.date,
+        createdBy: createdBy,
+        details: {
+            'Jornada Programada': `${values.prog_start || ''} - ${values.prog_end || ''}`,
+            'Día No Trabaja': values.day_off_date || '',
+            'Día Trabaja': values.day_on_date || '',
+            'Documento': documentPath ? 'Sí' : 'No',
+        }
+    });
+
     return data;
 };
 
@@ -300,6 +348,22 @@ export const createAutorizacion = async (
         .single();
 
     if (error) throw error;
+
+    // Send email notification
+    sendRecordCreatedEmail('Autorizaciones', {
+        rut: values.rut,
+        nombre: values.nombre,
+        terminal: values.terminal_code,
+        date: values.authorization_date,
+        createdBy: createdBy,
+        details: {
+            'Tipo': values.entry_or_exit === 'ENTRADA' ? 'Llegada Tardía' : 'Retiro Anticipado',
+            'Horario': values.horario || '',
+            'Turno': values.turno || '',
+            'Motivo': values.motivo || '',
+        }
+    });
+
     return data;
 };
 
@@ -439,6 +503,8 @@ export const subscribeToAttendanceChanges = (
 // EMAIL NOTIFICATION
 // ==========================================
 
+const EMAIL_RECIPIENT = 'isaac.avila@transdev.cl';
+
 export const sendAuthorizationEmail = async (
     type: 'AUTORIZADO' | 'RECHAZADO',
     subsection: string,
@@ -454,25 +520,97 @@ export const sendAuthorizationEmail = async (
         return;
     }
 
-    const subject = `Asistencia ${type}: ${subsection}`;
+    const subject = `[Asistencia] ${type}: ${subsection} - ${nombre}`;
     const body = `
-Se ha ${type === 'AUTORIZADO' ? 'autorizado' : 'rechazado'} el registro:
-
-- Tipo: ${subsection}
-- RUT: ${rut}
-- Nombre: ${nombre}
-- Terminal: ${terminal}
-- Fecha: ${date}
-${reason ? `- Motivo de rechazo: ${reason}` : ''}
-  `.trim();
+<h2 style="color: ${type === 'AUTORIZADO' ? '#16a34a' : '#dc2626'};">Registro ${type}</h2>
+<table style="border-collapse: collapse; width: 100%; max-width: 500px;">
+  <tr><td style="padding: 8px; border-bottom: 1px solid #e2e8f0;"><strong>Subsección:</strong></td><td style="padding: 8px; border-bottom: 1px solid #e2e8f0;">${subsection}</td></tr>
+  <tr><td style="padding: 8px; border-bottom: 1px solid #e2e8f0;"><strong>RUT:</strong></td><td style="padding: 8px; border-bottom: 1px solid #e2e8f0;">${rut}</td></tr>
+  <tr><td style="padding: 8px; border-bottom: 1px solid #e2e8f0;"><strong>Nombre:</strong></td><td style="padding: 8px; border-bottom: 1px solid #e2e8f0;">${nombre}</td></tr>
+  <tr><td style="padding: 8px; border-bottom: 1px solid #e2e8f0;"><strong>Terminal:</strong></td><td style="padding: 8px; border-bottom: 1px solid #e2e8f0;">${terminal}</td></tr>
+  <tr><td style="padding: 8px; border-bottom: 1px solid #e2e8f0;"><strong>Fecha:</strong></td><td style="padding: 8px; border-bottom: 1px solid #e2e8f0;">${date}</td></tr>
+  ${reason ? `<tr><td style="padding: 8px; border-bottom: 1px solid #e2e8f0;"><strong>Motivo:</strong></td><td style="padding: 8px; border-bottom: 1px solid #e2e8f0; color: #dc2626;">${reason}</td></tr>` : ''}
+</table>
+    `.trim();
 
     try {
         await fetch(emailApiUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ subject, body }),
+            body: JSON.stringify({
+                subject,
+                body,
+                to: [EMAIL_RECIPIENT],
+                audience: 'internal'
+            }),
         });
     } catch (err) {
         console.error('Error sending email:', err);
     }
 };
+
+export const sendRecordCreatedEmail = async (
+    subsection: string,
+    data: {
+        rut: string;
+        nombre: string;
+        terminal: string;
+        date: string;
+        createdBy: string;
+        details?: Record<string, string>;
+    }
+): Promise<void> => {
+    const emailApiUrl = import.meta.env.VITE_EMAIL_API_URL;
+    if (!emailApiUrl) {
+        console.warn('Email API URL not configured');
+        return;
+    }
+
+    const detailsRows = data.details
+        ? Object.entries(data.details)
+            .filter(([_, v]) => v)
+            .map(([k, v]) => `<tr><td style="padding: 8px; border-bottom: 1px solid #e2e8f0;"><strong>${k}:</strong></td><td style="padding: 8px; border-bottom: 1px solid #e2e8f0;">${v}</td></tr>`)
+            .join('')
+        : '';
+
+    const subject = `[Asistencia] Nuevo Registro: ${subsection} - ${data.nombre}`;
+    const body = `
+<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+  <div style="background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); padding: 20px; border-radius: 8px 8px 0 0;">
+    <h2 style="color: white; margin: 0;">Nuevo Registro de Asistencia</h2>
+    <p style="color: #bfdbfe; margin: 8px 0 0 0;">${subsection}</p>
+  </div>
+  <div style="background: #f8fafc; padding: 20px; border-radius: 0 0 8px 8px; border: 1px solid #e2e8f0; border-top: none;">
+    <table style="width: 100%; border-collapse: collapse;">
+      <tr><td style="padding: 8px; border-bottom: 1px solid #e2e8f0;"><strong>RUT:</strong></td><td style="padding: 8px; border-bottom: 1px solid #e2e8f0; font-family: monospace;">${data.rut}</td></tr>
+      <tr><td style="padding: 8px; border-bottom: 1px solid #e2e8f0;"><strong>Nombre:</strong></td><td style="padding: 8px; border-bottom: 1px solid #e2e8f0;">${data.nombre}</td></tr>
+      <tr><td style="padding: 8px; border-bottom: 1px solid #e2e8f0;"><strong>Terminal:</strong></td><td style="padding: 8px; border-bottom: 1px solid #e2e8f0;">${data.terminal}</td></tr>
+      <tr><td style="padding: 8px; border-bottom: 1px solid #e2e8f0;"><strong>Fecha:</strong></td><td style="padding: 8px; border-bottom: 1px solid #e2e8f0;">${data.date}</td></tr>
+      ${detailsRows}
+    </table>
+    <div style="margin-top: 16px; padding: 12px; background: #dbeafe; border-radius: 6px;">
+      <p style="margin: 0; font-size: 14px; color: #1e40af;">
+        <strong>Registrado por:</strong> ${data.createdBy}<br/>
+        <strong>Estado:</strong> <span style="color: #f59e0b; font-weight: bold;">PENDIENTE DE AUTORIZACIÓN</span>
+      </p>
+    </div>
+  </div>
+</div>
+    `.trim();
+
+    try {
+        await fetch(emailApiUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                subject,
+                body,
+                to: [EMAIL_RECIPIENT],
+                audience: 'internal'
+            }),
+        });
+    } catch (err) {
+        console.error('Error sending record created email:', err);
+    }
+};
+

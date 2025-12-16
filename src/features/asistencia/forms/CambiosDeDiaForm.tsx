@@ -37,10 +37,15 @@ export const CambiosDeDiaForm = ({ initialData, onSubmit, onCancel, isLoading }:
 
     const handleStaffFound = (staff: Staff | null) => {
         if (staff) {
+            // Parse horario "08:00-18:00" to get start and end
+            const [startTime, endTime] = (staff.horario || '').split('-');
+
             setForm((prev) => ({
                 ...prev,
                 nombre: staff.nombre,
                 terminal_code: staff.terminal_code as TerminalCode,
+                prog_start: startTime?.trim() || '',
+                prog_end: endTime?.trim() || '',
             }));
         }
     };
@@ -80,42 +85,27 @@ export const CambiosDeDiaForm = ({ initialData, onSubmit, onCancel, isLoading }:
                         onChange={(e) => setForm((prev) => ({ ...prev, cabezal: e.target.value }))} />
                 </div>
                 <div>
-                    <label className="label">Fecha</label>
+                    <label className="label">Fecha Registro</label>
                     <input type="date" className="input" value={form.date}
                         onChange={(e) => setForm((prev) => ({ ...prev, date: e.target.value }))} required />
                 </div>
             </div>
 
-            {/* Jornada Programada */}
-            <div className="card p-4">
-                <h4 className="font-semibold text-slate-700 mb-3">Jornada Programada</h4>
+            {/* Jornada Programada (auto-filled from Personal) */}
+            <div className="card p-4 bg-brand-50 border-brand-200">
+                <h4 className="font-semibold text-brand-800 mb-3">Jornada Programada (desde Personal)</h4>
                 <div className="grid grid-cols-2 gap-4">
                     <div>
-                        <label className="label">Inicio</label>
-                        <input type="time" className="input" value={form.prog_start}
-                            onChange={(e) => setForm((prev) => ({ ...prev, prog_start: e.target.value }))} />
+                        <label className="label">Entrada</label>
+                        <input type="text" className="input bg-brand-100" value={form.prog_start}
+                            onChange={(e) => setForm((prev) => ({ ...prev, prog_start: e.target.value }))}
+                            placeholder="--:--" />
                     </div>
                     <div>
-                        <label className="label">Término</label>
-                        <input type="time" className="input" value={form.prog_end}
-                            onChange={(e) => setForm((prev) => ({ ...prev, prog_end: e.target.value }))} />
-                    </div>
-                </div>
-            </div>
-
-            {/* Jornada ReProgramada */}
-            <div className="card p-4">
-                <h4 className="font-semibold text-slate-700 mb-3">Jornada ReProgramada</h4>
-                <div className="grid grid-cols-2 gap-4">
-                    <div>
-                        <label className="label">Inicio</label>
-                        <input type="time" className="input" value={form.reprogram_start}
-                            onChange={(e) => setForm((prev) => ({ ...prev, reprogram_start: e.target.value }))} />
-                    </div>
-                    <div>
-                        <label className="label">Término</label>
-                        <input type="time" className="input" value={form.reprogram_end}
-                            onChange={(e) => setForm((prev) => ({ ...prev, reprogram_end: e.target.value }))} />
+                        <label className="label">Salida</label>
+                        <input type="text" className="input bg-brand-100" value={form.prog_end}
+                            onChange={(e) => setForm((prev) => ({ ...prev, prog_end: e.target.value }))}
+                            placeholder="--:--" />
                     </div>
                 </div>
             </div>
@@ -131,20 +121,22 @@ export const CambiosDeDiaForm = ({ initialData, onSubmit, onCancel, isLoading }:
                     </div>
                     <div>
                         <label className="label">Inicio</label>
-                        <input type="time" className="input" value={form.day_off_start}
-                            onChange={(e) => setForm((prev) => ({ ...prev, day_off_start: e.target.value }))} />
+                        <input type="text" className="input" value={form.day_off_start}
+                            onChange={(e) => setForm((prev) => ({ ...prev, day_off_start: e.target.value }))}
+                            placeholder="--:--" />
                     </div>
                     <div>
                         <label className="label">Término</label>
-                        <input type="time" className="input" value={form.day_off_end}
-                            onChange={(e) => setForm((prev) => ({ ...prev, day_off_end: e.target.value }))} />
+                        <input type="text" className="input" value={form.day_off_end}
+                            onChange={(e) => setForm((prev) => ({ ...prev, day_off_end: e.target.value }))}
+                            placeholder="--:--" />
                     </div>
                 </div>
             </div>
 
             {/* Día ReProgramado (trabaja) */}
-            <div className="card p-4 bg-brand-50">
-                <h4 className="font-semibold text-slate-700 mb-3">Día ReProgramado (Trabaja)</h4>
+            <div className="card p-4 bg-success-50 border-success-200">
+                <h4 className="font-semibold text-success-800 mb-3">Día ReProgramado (Trabaja)</h4>
                 <div className="grid grid-cols-3 gap-4">
                     <div>
                         <label className="label">Fecha</label>
@@ -153,13 +145,15 @@ export const CambiosDeDiaForm = ({ initialData, onSubmit, onCancel, isLoading }:
                     </div>
                     <div>
                         <label className="label">Inicio</label>
-                        <input type="time" className="input" value={form.day_on_start}
-                            onChange={(e) => setForm((prev) => ({ ...prev, day_on_start: e.target.value }))} />
+                        <input type="text" className="input" value={form.day_on_start}
+                            onChange={(e) => setForm((prev) => ({ ...prev, day_on_start: e.target.value }))}
+                            placeholder="--:--" />
                     </div>
                     <div>
                         <label className="label">Término</label>
-                        <input type="time" className="input" value={form.day_on_end}
-                            onChange={(e) => setForm((prev) => ({ ...prev, day_on_end: e.target.value }))} />
+                        <input type="text" className="input" value={form.day_on_end}
+                            onChange={(e) => setForm((prev) => ({ ...prev, day_on_end: e.target.value }))}
+                            placeholder="--:--" />
                     </div>
                 </div>
             </div>
