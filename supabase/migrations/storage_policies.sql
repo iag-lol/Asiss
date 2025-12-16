@@ -1,5 +1,5 @@
 -- =============================================
--- MIGRACIÓN: STORAGE - ATTENDANCE DOCS (FIX PERMISOS ANÓNIMOS)
+-- MIGRACIÓN: STORAGE - FIX PERMISOS (VERSIÓN SEGURA)
 -- Ejecutar en Supabase SQL Editor
 -- =============================================
 
@@ -12,37 +12,31 @@ VALUES (
   5242880, -- 5MB limit
   ARRAY['image/jpeg', 'image/png', 'application/pdf']
 )
-ON CONFLICT (id) DO UPDATE SET
-  public = true,
-  file_size_limit = 5242880,
-  allowed_mime_types = ARRAY['image/jpeg', 'image/png', 'application/pdf'];
+ON CONFLICT (id) DO UPDATE SET public = true;
 
--- 2. Habilitar RLS (Seguridad estándar)
-ALTER TABLE storage.objects ENABLE ROW LEVEL SECURITY;
+-- NOTA: Hemos eliminado 'ALTER TABLE storage.objects ENABLE ROW LEVEL SECURITY' 
+-- porque causa errores de permisos y RLS ya viene activado por defecto.
 
--- 3. ELIMINAR POLÍTICAS ANTIQUAS (Para evitar conflictos)
-DROP POLICY IF EXISTS "Public Access Attendance Docs" ON storage.objects;
+-- 2. ELIMINAR POLÍTICAS ANTIQUAS (Para limpiar)
 DROP POLICY IF EXISTS "Public Upload Attendance Docs" ON storage.objects;
-DROP POLICY IF EXISTS "Public Update Attendance Docs" ON storage.objects;
+DROP POLICY IF EXISTS "Public Access Attendance Docs" ON storage.objects;
 DROP POLICY IF EXISTS "Allow public uploads" ON storage.objects;
-DROP POLICY IF EXISTS "Give public access to files" ON storage.objects;
+DROP POLICY IF EXISTS "Public Update Attendance Docs" ON storage.objects;
 
--- 4. CREAR POLÍTICAS EXPLÍCITAS PARA 'public' (Usuario Anonimo y Autenticado)
-
--- PERMITIR VER ARCHIVOS (SELECT) a TODOS (public)
-CREATE POLICY "Public Access Attendance Docs"
-ON storage.objects FOR SELECT
-TO public
-USING (bucket_id = 'attendance-docs');
-
--- PERMITIR SUBIR ARCHIVOS (INSERT) a TODOS (public)
--- Importante: 'TO public' permite que usuarios sin sesión de Supabase Auth (solo key anon) suban archivos.
+-- 3. CREAR POLÍTICAS DE ACCESO PÚBLICO
+-- Permitir INSERT a cualquier usuario (incluyendo anon)
 CREATE POLICY "Public Upload Attendance Docs"
 ON storage.objects FOR INSERT
 TO public
 WITH CHECK (bucket_id = 'attendance-docs');
 
--- PERMITIR ACTUALIZAR ARCHIVOS (UPDATE) a TODOS (public)
+-- Permitir SELECT a cualquier usuario
+CREATE POLICY "Public Access Attendance Docs"
+ON storage.objects FOR SELECT
+TO public
+USING (bucket_id = 'attendance-docs');
+
+-- Permitir UPDATE a cualquier usuario
 CREATE POLICY "Public Update Attendance Docs"
 ON storage.objects FOR UPDATE
 TO public

@@ -283,13 +283,30 @@ export const createCambioDia = async (
 
     const { document: _, ...rest } = values;
 
+    // Sanitize empty strings to null for date/time columns
+    const payload: any = {
+        ...rest,
+        document_path: documentPath,
+        created_by_supervisor: normalizeName(createdBy),
+    };
+
+    const columnsToSanitize = [
+        'day_off_date', 'day_on_date',
+        'prog_start', 'prog_end',
+        'reprogram_start', 'reprogram_end',
+        'day_off_start', 'day_off_end',
+        'day_on_start', 'day_on_end'
+    ];
+
+    columnsToSanitize.forEach(col => {
+        if (payload[col] === '') {
+            payload[col] = null;
+        }
+    });
+
     const { data, error } = await supabase
         .from('attendance_cambios_dia')
-        .insert({
-            ...rest,
-            document_path: documentPath,
-            created_by_supervisor: normalizeName(createdBy),
-        })
+        .insert(payload)
         .select()
         .single();
 
@@ -335,9 +352,25 @@ export const updateCambioDia = async (
 ): Promise<CambioDia> => {
     const { document: _, ...rest } = values;
 
+    // Sanitize empty strings to null for date/time columns to avoid Postgres errors
+    const payload: any = { ...rest };
+    const columnsToSanitize = [
+        'day_off_date', 'day_on_date',
+        'prog_start', 'prog_end',
+        'reprogram_start', 'reprogram_end',
+        'day_off_start', 'day_off_end',
+        'day_on_start', 'day_on_end'
+    ];
+
+    columnsToSanitize.forEach(col => {
+        if (payload[col] === '') {
+            payload[col] = null;
+        }
+    });
+
     const { data, error } = await supabase
         .from('attendance_cambios_dia')
-        .update(rest)
+        .update(payload)
         .eq('id', id)
         .select()
         .single();

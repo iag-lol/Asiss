@@ -91,6 +91,17 @@ CREATE POLICY "Allow all for staff" ON staff FOR ALL USING (true) WITH CHECK (tr
 CREATE POLICY "Allow all for admonitions" ON staff_admonitions FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Allow read for caps" ON staff_caps FOR SELECT USING (true);
 
+
+
+
+
+
+
+
+
+
+
+
 -- =============================================
 -- STORAGE: Create bucket for staff documents
 -- Run this separately or create via Supabase Dashboard:
