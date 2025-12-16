@@ -1,4 +1,6 @@
-import { NavLink } from 'react-router-dom';
+import { useState } from 'react';
+import { NavLink, useLocation } from 'react-router-dom';
+import { Icon, IconName } from '../common/Icon';
 
 interface Props {
   isOpen: boolean;
@@ -8,97 +10,181 @@ interface Props {
 interface NavItem {
   label: string;
   to: string;
+  icon: IconName;
 }
 
 interface NavSection {
   label: string;
+  icon: IconName;
   items: NavItem[];
 }
 
 const NAVIGATION: NavSection[] = [
   {
     label: 'Operación',
+    icon: 'building',
     items: [
-      { label: 'Personal', to: '/personal' },
-      { label: 'Reuniones', to: '/reuniones' },
-      { label: 'Tareas', to: '/tareas' },
-      { label: 'Informativos', to: '/informativos' },
-      { label: 'Asistencia', to: '/asistencia' },
-      { label: 'Credenciales de Respaldo', to: '/credenciales' },
-      { label: 'Solicitudes', to: '/solicitudes' },
+      { label: 'Personal', to: '/personal', icon: 'users' },
+      { label: 'Reuniones', to: '/reuniones', icon: 'calendar' },
+      { label: 'Tareas', to: '/tareas', icon: 'clipboard' },
+      { label: 'Informativos', to: '/informativos', icon: 'megaphone' },
+      { label: 'Asistencia', to: '/asistencia', icon: 'clock' },
+      { label: 'Credenciales', to: '/credenciales', icon: 'key' },
+      { label: 'Solicitudes', to: '/solicitudes', icon: 'inbox' },
     ],
   },
   {
     label: 'Aseo',
+    icon: 'sparkles',
     items: [
-      { label: 'Interior', to: '/aseo/interior' },
-      { label: 'Exterior', to: '/aseo/exterior' },
-      { label: 'Rodillo', to: '/aseo/rodillo' },
+      { label: 'Interior', to: '/aseo/interior', icon: 'droplet' },
+      { label: 'Exterior', to: '/aseo/exterior', icon: 'spray' },
+      { label: 'Rodillo', to: '/aseo/rodillo', icon: 'brush' },
     ],
   },
   {
     label: 'MiniCheck',
+    icon: 'check-circle',
     items: [
-      { label: 'Extintor', to: '/minicheck/extintor' },
-      { label: 'Tag', to: '/minicheck/tag' },
-      { label: 'Mobileye', to: '/minicheck/mobileye' },
-      { label: 'Odómetro', to: '/minicheck/odometro' },
-      { label: 'Publicidad', to: '/minicheck/publicidad' },
+      { label: 'Extintor', to: '/minicheck/extintor', icon: 'check-circle' },
+      { label: 'Tag', to: '/minicheck/tag', icon: 'tag' },
+      { label: 'Mobileye', to: '/minicheck/mobileye', icon: 'eye' },
+      { label: 'Odómetro', to: '/minicheck/odometro', icon: 'gauge' },
+      { label: 'Publicidad', to: '/minicheck/publicidad', icon: 'image' },
     ],
   },
   {
     label: 'Flota',
-    items: [{ label: 'Estado de Flota', to: '/estado-flota' }],
+    icon: 'truck',
+    items: [{ label: 'Estado de Flota', to: '/estado-flota', icon: 'truck' }],
   },
 ];
 
 export const Sidebar = ({ isOpen, onClose }: Props) => {
-  const baseStyles =
-    'block rounded-md px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-brand-50 hover:text-brand-700';
+  const location = useLocation();
+  const [expandedSections, setExpandedSections] = useState<string[]>(() => {
+    // Expand section that contains current route
+    const currentSection = NAVIGATION.find((section) =>
+      section.items.some((item) => location.pathname.startsWith(item.to))
+    );
+    return currentSection ? [currentSection.label] : ['Operación'];
+  });
 
-  const content = (
-    <aside className="flex h-full flex-col gap-6 overflow-y-auto bg-white px-4 pb-6 pt-6 shadow-lg md:shadow-none">
-      <div className="flex items-center justify-between md:hidden">
-        <p className="text-base font-bold text-slate-900">Menú</p>
-        <button className="text-sm text-slate-500" onClick={onClose}>
-          Cerrar
-        </button>
-      </div>
-      <nav className="space-y-6">
-        {NAVIGATION.map((section) => (
-          <div key={section.label} className="space-y-2">
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{section.label}</p>
-            <div className="space-y-1">
-              {section.items.map((item) => (
-                <NavLink
-                  key={item.to}
-                  to={item.to}
-                  className={({ isActive }) =>
-                    `${baseStyles} ${isActive ? 'bg-brand-50 text-brand-700 ring-1 ring-brand-100' : ''}`
-                  }
-                  onClick={onClose}
-                >
-                  {item.label}
-                </NavLink>
-              ))}
-            </div>
-          </div>
-        ))}
-      </nav>
-    </aside>
-  );
+  const toggleSection = (label: string) => {
+    setExpandedSections((prev) =>
+      prev.includes(label) ? prev.filter((s) => s !== label) : [...prev, label]
+    );
+  };
+
+  const isSectionActive = (section: NavSection) =>
+    section.items.some((item) => location.pathname.startsWith(item.to));
 
   return (
-    <div>
-      {/* Mobile overlay */}
-      <div className={`${isOpen ? 'fixed' : 'hidden'} inset-0 z-30 bg-black/30 md:hidden`} onClick={onClose} />
+    <>
+      {/* Mobile Overlay */}
       <div
-        className={`${
-          isOpen ? 'translate-x-0' : '-translate-x-full'
-        } fixed inset-y-0 left-0 z-40 w-72 transform transition-transform md:static md:z-auto md:block md:w-64 md:translate-x-0`}
+        className={`${isOpen ? 'fixed' : 'hidden'} inset-0 z-40 bg-black/60 backdrop-blur-sm md:hidden`}
+        onClick={onClose}
+      />
+
+      {/* Sidebar */}
+      <aside
+        className={`${isOpen ? 'translate-x-0' : '-translate-x-full'
+          } fixed inset-y-0 left-0 z-50 w-72 transform transition-transform duration-300 ease-out md:static md:z-auto md:w-72 md:translate-x-0`}
       >
-        {content}
-      </div>
-    </div>
+        <div className="flex h-full flex-col bg-gradient-to-b from-dark-800 to-dark-900 shadow-2xl">
+          {/* Logo */}
+          <div className="flex items-center gap-3 px-6 py-5 border-b border-white/10">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-brand-500 to-brand-700 shadow-brand">
+              <span className="text-lg font-bold text-white">A</span>
+            </div>
+            <div className="flex flex-col">
+              <span className="text-sm font-bold text-white">Asiss</span>
+              <span className="text-xs text-slate-400">Dashboard Logística</span>
+            </div>
+            <button
+              onClick={onClose}
+              className="ml-auto rounded-lg p-1.5 text-slate-400 hover:bg-white/10 hover:text-white md:hidden"
+            >
+              <Icon name="x" size={20} />
+            </button>
+          </div>
+
+          {/* Navigation */}
+          <nav className="flex-1 overflow-y-auto custom-scrollbar px-3 py-4 space-y-1">
+            {NAVIGATION.map((section) => {
+              const isExpanded = expandedSections.includes(section.label);
+              const isActive = isSectionActive(section);
+
+              return (
+                <div key={section.label} className="mb-1">
+                  {/* Section Header */}
+                  <button
+                    onClick={() => toggleSection(section.label)}
+                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group ${isActive
+                        ? 'bg-white/10 text-white'
+                        : 'text-slate-400 hover:bg-white/5 hover:text-slate-200'
+                      }`}
+                  >
+                    <div
+                      className={`flex h-8 w-8 items-center justify-center rounded-lg transition-all duration-200 ${isActive
+                          ? 'bg-gradient-to-br from-brand-500 to-brand-600 text-white shadow-brand'
+                          : 'bg-white/5 text-slate-400 group-hover:bg-white/10 group-hover:text-slate-200'
+                        }`}
+                    >
+                      <Icon name={section.icon} size={18} />
+                    </div>
+                    <span className="flex-1 text-left text-sm font-semibold">{section.label}</span>
+                    <Icon
+                      name="chevron-down"
+                      size={16}
+                      className={`transition-transform duration-200 ${isExpanded ? 'rotate-0' : '-rotate-90'}`}
+                    />
+                  </button>
+
+                  {/* Section Items */}
+                  <div
+                    className={`overflow-hidden transition-all duration-300 ease-out ${isExpanded ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
+                      }`}
+                  >
+                    <div className="mt-1 ml-4 pl-4 border-l border-white/10 space-y-0.5">
+                      {section.items.map((item) => (
+                        <NavLink
+                          key={item.to}
+                          to={item.to}
+                          onClick={onClose}
+                          className={({ isActive }) =>
+                            `flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all duration-200 ${isActive
+                              ? 'bg-brand-500/20 text-brand-300 font-medium'
+                              : 'text-slate-400 hover:bg-white/5 hover:text-slate-200'
+                            }`
+                          }
+                        >
+                          <Icon name={item.icon} size={16} />
+                          <span>{item.label}</span>
+                        </NavLink>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </nav>
+
+          {/* Footer */}
+          <div className="border-t border-white/10 px-4 py-4">
+            <div className="flex items-center gap-3 px-2">
+              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-accent-400 to-accent-600 text-white text-sm font-bold">
+                S
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-white truncate">Supervisor</p>
+                <p className="text-xs text-slate-400">Terminal Activo</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </>
   );
 };

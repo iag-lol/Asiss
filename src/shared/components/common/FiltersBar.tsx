@@ -9,10 +9,16 @@ interface Props {
 }
 
 export const FiltersBar = ({ terminalContext, onTerminalChange, children }: Props) => (
-  <div className="card mb-4 p-4">
-    <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-      <TerminalSelector value={terminalContext} onChange={onTerminalChange} />
-      {children && <div className="flex flex-wrap items-end gap-3">{children}</div>}
+  <div className="card p-4 mb-6">
+    <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+      <div className="flex-shrink-0">
+        <TerminalSelector value={terminalContext} onChange={onTerminalChange} />
+      </div>
+      {children && (
+        <div className="flex flex-wrap items-end gap-3 border-t border-slate-100 pt-4 lg:border-0 lg:pt-0">
+          {children}
+        </div>
+      )}
     </div>
   </div>
 );

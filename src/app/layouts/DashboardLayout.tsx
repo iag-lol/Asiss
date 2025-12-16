@@ -7,14 +7,33 @@ export const DashboardLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-slate-100 to-slate-50">
       <div className="flex">
+        {/* Sidebar */}
         <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-        <div className="flex min-h-screen flex-1 flex-col md:ml-64">
+
+        {/* Main Content */}
+        <div className="flex min-h-screen flex-1 flex-col md:ml-72">
+          {/* Header */}
           <AppHeader onMenuToggle={() => setSidebarOpen((prev) => !prev)} />
-          <main className="flex-1 px-4 pb-8 pt-4 md:px-6">
-            <Outlet />
+
+          {/* Page Content */}
+          <main className="flex-1 px-4 pb-8 pt-6 md:px-8">
+            <div className="animate-fade-in">
+              <Outlet />
+            </div>
           </main>
+
+          {/* Footer */}
+          <footer className="border-t border-slate-200 bg-white/50 px-4 py-4 md:px-8">
+            <div className="flex flex-col items-center justify-between gap-2 text-xs text-slate-500 sm:flex-row">
+              <p>© 2024 Asiss · Dashboard de Operaciones y Logística</p>
+              <p className="flex items-center gap-1">
+                <span className="inline-block h-2 w-2 rounded-full bg-success-500 animate-pulse"></span>
+                Sistema operativo
+              </p>
+            </div>
+          </footer>
         </div>
       </div>
     </div>
