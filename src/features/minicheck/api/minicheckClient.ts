@@ -1,7 +1,8 @@
 import { createClient } from '@supabase/supabase-js';
 
-const minicheckUrl = import.meta.env.VITE_MINICHECK_SUPABASE_URL;
-const minicheckAnonKey = import.meta.env.VITE_MINICHECK_SUPABASE_ANON_KEY;
+// Try MiniCheck-specific credentials first, fallback to main Supabase credentials
+const minicheckUrl = import.meta.env.VITE_MINICHECK_SUPABASE_URL || import.meta.env.VITE_SUPABASE_URL;
+const minicheckAnonKey = import.meta.env.VITE_MINICHECK_SUPABASE_ANON_KEY || import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 if (!minicheckUrl || !minicheckAnonKey) {
     console.warn('MiniCheck Supabase credentials not configured.');
