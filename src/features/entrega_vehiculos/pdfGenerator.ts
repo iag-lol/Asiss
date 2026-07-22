@@ -55,31 +55,49 @@ const safeFilename = (value: string) =>
 /* ------------------------------------------------------------------ */
 
 /**
- * Si existe `public/logo_transdev.png` se usa el logo oficial en alta
- * resolución. Si no está disponible, se dibuja la marca vectorial
- * equivalente para que la ficha nunca salga sin identidad corporativa.
+ * Logo oficial: basta con dejar el archivo en `public/` con alguno de los
+ * nombres de `LOGO_CANDIDATES` (PNG con fondo transparente es lo ideal).
+ * Se prueban rutas relativas y absolutas para que funcione tanto en `npm run
+ * dev` como en el sitio publicado. Si no se encuentra ninguno, se dibuja la
+ * marca vectorial para que la ficha nunca salga sin identidad corporativa.
  */
-const LOGO_URL = '/logo_transdev.png';
+const LOGO_CANDIDATES = [
+  './logo_transdev.png',
+  '/logo_transdev.png',
+  './logo_transdev.jpg',
+  '/logo_transdev.jpg',
+  './logo_transdev.webp',
+  '/logo_transdev.webp',
+];
+
 let logoPromise: Promise<string | null> | null = null;
+
+const fetchAsDataUrl = async (url: string): Promise<string | null> => {
+  try {
+    const response = await fetch(url, { cache: 'force-cache' });
+    if (!response.ok) return null;
+    const blob = await response.blob();
+    if (!blob.type.startsWith('image/')) return null;
+    return await new Promise<string | null>((resolve) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(typeof reader.result === 'string' ? reader.result : null);
+      reader.onerror = () => resolve(null);
+      reader.readAsDataURL(blob);
+    });
+  } catch {
+    return null;
+  }
+};
 
 const loadOfficialLogo = (): Promise<string | null> => {
   if (logoPromise) return logoPromise;
   logoPromise = (async () => {
     if (typeof fetch !== 'function' || typeof FileReader === 'undefined') return null;
-    try {
-      const response = await fetch(LOGO_URL, { cache: 'force-cache' });
-      if (!response.ok) return null;
-      const blob = await response.blob();
-      if (!blob.type.startsWith('image/')) return null;
-      return await new Promise<string | null>((resolve) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(typeof reader.result === 'string' ? reader.result : null);
-        reader.onerror = () => resolve(null);
-        reader.readAsDataURL(blob);
-      });
-    } catch {
-      return null;
+    for (const url of LOGO_CANDIDATES) {
+      const dataUrl = await fetchAsDataUrl(url);
+      if (dataUrl) return dataUrl;
     }
+    return null;
   })();
   return logoPromise;
 };
