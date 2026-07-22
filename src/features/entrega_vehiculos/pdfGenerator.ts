@@ -175,7 +175,7 @@ const drawLogo = (doc: jsPDF, logo: string | null, boxX: number, boxY: number, b
   if (logo) {
     try {
       const props = doc.getImageProperties(logo);
-      const ratio = Math.min((boxW - 12) / props.width, (boxH - 8) / props.height);
+      const ratio = Math.min((boxW - 8) / props.width, (boxH - 6) / props.height);
       const w = props.width * ratio;
       const h = props.height * ratio;
       doc.addImage(logo, boxX + (boxW - w) / 2, boxY + (boxH - h) / 2, w, h, undefined, 'FAST');
