@@ -35,6 +35,7 @@ const NAVIGATION: NavSection[] = [
       // { label: 'Mi Info', to: '/mi-info', icon: 'user' },
       { label: 'Credenciales', to: '/credenciales', icon: 'key' },
       { label: 'Fiscalización ICA', to: '/fiscalizacion-ica', icon: 'clipboard' },
+      { label: 'Entrega de Vehículos', to: '/entrega-vehiculos', icon: 'truck' },
       // { label: 'Solicitudes', to: '/solicitudes', icon: 'inbox' },
       { label: 'Amonestaciones', to: '/amonestaciones', icon: 'alert-triangle' },
     ],
