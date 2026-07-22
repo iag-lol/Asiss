@@ -161,20 +161,20 @@ export const EntregaVehiculosPage = () => {
     return false;
   };
 
-  const handleDownloadOne = (request: VehicleHandoverRequest) => {
+  const handleDownloadOne = async (request: VehicleHandoverRequest) => {
     if (!ensureReady(request)) return;
     try {
-      downloadVehiclePdf(request);
+      await downloadVehiclePdf(request);
       showSuccessToast('PDF generado', `Entrega y recepción de ${request.plate} se descargaron en un archivo de 2 páginas.`);
     } catch (error) {
       showErrorToast('No se pudo generar el PDF', error instanceof Error ? error.message : 'Inténtalo nuevamente.');
     }
   };
 
-  const handlePrintOne = (request: VehicleHandoverRequest) => {
+  const handlePrintOne = async (request: VehicleHandoverRequest) => {
     if (!ensureReady(request)) return;
     try {
-      printVehiclePdf(request);
+      await printVehiclePdf(request);
     } catch (error) {
       showErrorToast('No se pudo abrir la impresión', error instanceof Error ? error.message : 'Inténtalo nuevamente.');
     }
@@ -318,10 +318,10 @@ export const EntregaVehiculosPage = () => {
             <button
               type="button"
               disabled={!requests.length}
-              onClick={() => {
+              onClick={async () => {
                 if (!requireAllReady()) return;
                 try {
-                  printAllVehiclePdfs(requests);
+                  await printAllVehiclePdfs(requests);
                 } catch (error) {
                   showErrorToast('No se pudo abrir la impresión', error instanceof Error ? error.message : 'Inténtalo nuevamente.');
                 }
@@ -334,10 +334,10 @@ export const EntregaVehiculosPage = () => {
             <button
               type="button"
               disabled={!requests.length}
-              onClick={() => {
+              onClick={async () => {
                 if (!requireAllReady()) return;
                 try {
-                  downloadAllVehiclePdfs(requests);
+                  await downloadAllVehiclePdfs(requests);
                   showSuccessToast('PDF consolidado generado', `${requests.length} solicitudes y ${totalPages} páginas listas para imprimir.`);
                 } catch (error) {
                   showErrorToast('No se pudo generar el PDF', error instanceof Error ? error.message : 'Inténtalo nuevamente.');
