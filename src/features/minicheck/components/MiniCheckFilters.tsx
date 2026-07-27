@@ -1,66 +1,116 @@
-import { FiltersBar } from '../../../shared/components/common/FiltersBar';
-import { TerminalContext } from '../../../shared/types/terminal';
+import { Icon } from '../../../shared/components/common/Icon';
+
+const MINICHECK_TERMINALS = [
+  'El Roble',
+  'Los Agricultores',
+  'Maipú',
+  'Renca',
+  'SIN_TERMINAL',
+] as const;
 
 interface Props {
-    terminalContext: TerminalContext;
-    onTerminalChange: (context: TerminalContext) => void;
-    search: string;
-    onSearchChange: (val: string) => void;
-    dateFrom: string;
-    onDateFromChange: (val: string) => void;
-    dateTo: string;
-    onDateToChange: (val: string) => void;
-    children?: React.ReactNode;
+  terminal: string;
+  onTerminalChange: (value: string) => void;
+  search: string;
+  onSearchChange: (value: string) => void;
+  dateFrom: string;
+  onDateFromChange: (value: string) => void;
+  dateTo: string;
+  onDateToChange: (value: string) => void;
 }
 
 export const MiniCheckFilters = ({
-    terminalContext,
-    onTerminalChange,
-    search,
-    onSearchChange,
-    dateFrom,
-    onDateFromChange,
-    dateTo,
-    onDateToChange,
-    children,
+  terminal,
+  onTerminalChange,
+  search,
+  onSearchChange,
+  dateFrom,
+  onDateFromChange,
+  dateTo,
+  onDateToChange,
 }: Props) => {
-    return (
-        <FiltersBar terminalContext={terminalContext} onTerminalChange={onTerminalChange}>
-            {/* Search PPU */}
-            <div className="flex flex-col gap-1">
-                <label className="text-xs font-semibold text-slate-500 uppercase">Buscar PPU</label>
-                <input
-                    type="text"
-                    className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 w-32 lg:w-40"
-                    placeholder="PPU..."
-                    value={search}
-                    onChange={(e) => onSearchChange(e.target.value)}
-                />
-            </div>
+  const hasFilters = Boolean(terminal || search || dateFrom || dateTo);
 
-            {/* Date From */}
-            <div className="flex flex-col gap-1">
-                <label className="text-xs font-semibold text-slate-500 uppercase">Desde</label>
-                <input
-                    type="date"
-                    className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 outline-none focus:border-brand-500 w-full"
-                    value={dateFrom}
-                    onChange={(e) => onDateFromChange(e.target.value)}
-                />
-            </div>
+  const clearFilters = () => {
+    onTerminalChange('');
+    onSearchChange('');
+    onDateFromChange('');
+    onDateToChange('');
+  };
 
-            {/* Date To */}
-            <div className="flex flex-col gap-1">
-                <label className="text-xs font-semibold text-slate-500 uppercase">Hasta</label>
-                <input
-                    type="date"
-                    className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 outline-none focus:border-brand-500 w-full"
-                    value={dateTo}
-                    onChange={(e) => onDateToChange(e.target.value)}
-                />
-            </div>
+  return (
+    <div className="card p-4">
+      <div className="flex flex-col gap-4 xl:flex-row xl:items-end">
+        <label className="flex min-w-0 flex-1 flex-col gap-1.5">
+          <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
+            Buscar patente
+          </span>
+          <span className="relative">
+            <Icon
+              name="search"
+              size={17}
+              className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+            />
+            <input
+              type="search"
+              className="input py-2.5 pl-10 uppercase"
+              placeholder="Ej. LXWP76"
+              value={search}
+              onChange={(event) => onSearchChange(event.target.value.toUpperCase())}
+            />
+          </span>
+        </label>
 
-            {children}
-        </FiltersBar>
-    );
+        <label className="flex min-w-[210px] flex-col gap-1.5">
+          <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
+            Terminal Mini-Check
+          </span>
+          <select
+            className="select py-2.5"
+            value={terminal}
+            onChange={(event) => onTerminalChange(event.target.value)}
+          >
+            <option value="">Todos los terminales</option>
+            {MINICHECK_TERMINALS.map((option) => (
+              <option key={option} value={option}>
+                {option === 'SIN_TERMINAL' ? 'Fuera de geocerca' : option}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label className="flex flex-col gap-1.5">
+          <span className="text-xs font-bold uppercase tracking-wider text-slate-500">Desde</span>
+          <input
+            type="date"
+            className="input py-2.5"
+            value={dateFrom}
+            max={dateTo || undefined}
+            onChange={(event) => onDateFromChange(event.target.value)}
+          />
+        </label>
+
+        <label className="flex flex-col gap-1.5">
+          <span className="text-xs font-bold uppercase tracking-wider text-slate-500">Hasta</span>
+          <input
+            type="date"
+            className="input py-2.5"
+            value={dateTo}
+            min={dateFrom || undefined}
+            onChange={(event) => onDateToChange(event.target.value)}
+          />
+        </label>
+
+        <button
+          type="button"
+          className="btn btn-ghost min-h-[42px] disabled:cursor-not-allowed disabled:opacity-40"
+          disabled={!hasFilters}
+          onClick={clearFilters}
+        >
+          <Icon name="x" size={16} />
+          Limpiar
+        </button>
+      </div>
+    </div>
+  );
 };

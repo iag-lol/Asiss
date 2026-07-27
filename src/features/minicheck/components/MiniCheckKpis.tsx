@@ -15,9 +15,9 @@ interface Props {
 
 export const MiniCheckKpis = ({ items }: Props) => {
     return (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
             {items.map((item, idx) => (
-                <div key={idx} className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm flex items-start justify-between">
+                <div key={`${item.label}-${idx}`} className="flex items-start justify-between rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
                     <div>
                         <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">{item.label}</p>
                         <h3 className="text-2xl font-bold text-slate-900">{item.value}</h3>

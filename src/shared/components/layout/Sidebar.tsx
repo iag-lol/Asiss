@@ -36,6 +36,7 @@ const NAVIGATION: NavSection[] = [
       { label: 'Credenciales', to: '/credenciales', icon: 'key' },
       { label: 'Fiscalización ICA', to: '/fiscalizacion-ica', icon: 'clipboard' },
       { label: 'Entrega de Vehículos', to: '/entrega-vehiculos', icon: 'truck' },
+      { label: 'Proyección', to: '/proyeccion', icon: 'bar-chart' },
       // { label: 'Solicitudes', to: '/solicitudes', icon: 'inbox' },
       { label: 'Amonestaciones', to: '/amonestaciones', icon: 'alert-triangle' },
     ],
@@ -47,6 +48,20 @@ const NAVIGATION: NavSection[] = [
       { label: 'Asistencia Mensual', to: '/control-asiss/asistencia-mensual', icon: 'calendar-range' },
       { label: 'Control HHEE', to: '/control-asiss/hhee', icon: 'clock' },
       { label: 'Exportes Excel', to: '/control-asiss/exportes', icon: 'download' },
+    ],
+  },
+  {
+    label: 'Mini-Check',
+    icon: 'check-circle',
+    items: [
+      { label: 'Cámaras', to: '/mini-check/camaras', icon: 'eye' },
+      { label: 'TAG', to: '/mini-check/tag', icon: 'tag' },
+      { label: 'Extintores', to: '/mini-check/extintores', icon: 'alert-circle' },
+      { label: 'Mobileye', to: '/mini-check/mobileye', icon: 'activity' },
+      { label: 'Odómetro', to: '/mini-check/odometro', icon: 'gauge' },
+      { label: 'Rack', to: '/mini-check/rack', icon: 'layers' },
+      { label: 'Wi-Fi', to: '/mini-check/wifi', icon: 'sparkles' },
+      { label: 'Publicidad', to: '/mini-check/publicidad', icon: 'image' },
     ],
   },
 ];

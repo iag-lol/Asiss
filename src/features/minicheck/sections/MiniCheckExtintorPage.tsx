@@ -1,174 +1,180 @@
-import { useState, useMemo } from 'react';
-import { PageHeader } from '../../../shared/components/common/PageHeader';
-import { DataTable, TableColumn } from '../../../shared/components/common/DataTable';
-import { LoadingState } from '../../../shared/components/common/LoadingState';
-import { ErrorState } from '../../../shared/components/common/ErrorState';
-import { EmptyState } from '../../../shared/components/common/EmptyState';
-import { ExportMenu } from '../../../shared/components/common/ExportMenu';
-import { useTerminalStore } from '../../../shared/state/terminalStore';
-import { exportToXlsx } from '../../../shared/utils/exportToXlsx';
-import { displayTerminal } from '../../../shared/utils/terminal';
-import { formatDate } from '../../../shared/utils/dates';
-import { MiniCheckFilters as FiltersComponent } from '../components/MiniCheckFilters';
-import { MiniCheckKpis, KpiItem } from '../components/MiniCheckKpis';
-import { useExtintores } from '../hooks/useMiniCheck';
-import { Extintor, MiniCheckFilters } from '../types';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
+import { TableColumn } from '../../../shared/components/common/DataTable';
+import { fetchExtintores } from '../api/minicheckApi';
+import { KpiItem } from '../components/MiniCheckKpis';
+import { DistributionItem, MiniCheckModulePage } from '../components/MiniCheckModulePage';
+import { BooleanStatus, StatusPill, StatusTone } from '../components/MiniCheckStatus';
+import { Extintor } from '../types';
 
-export const MiniCheckExtintorPage = () => {
-    const terminalContext = useTerminalStore((state) => state.context);
-    const setTerminalContext = useTerminalStore((state) => state.setContext);
-
-    // Filter State
-    const [search, setSearch] = useState('');
-    const [dateFrom, setDateFrom] = useState('');
-    const [dateTo, setDateTo] = useState('');
-
-    const queryFilters: MiniCheckFilters = useMemo(() => ({
-        terminalContext,
-        search,
-        dateFrom: dateFrom || undefined,
-        dateTo: dateTo || undefined,
-    }), [terminalContext, search, dateFrom, dateTo]);
-
-    // Data Fetch
-    const { data, isLoading, isError, refetch } = useExtintores(queryFilters);
-
-    // Derived KPIs
-    const kpis: KpiItem[] = useMemo(() => {
-        if (!data) return [];
-        const total = data.length;
-        const vencidos = data.filter(d => d.certificacion === 'VENCIDA').length;
-        const sinExtintor = data.filter(d => !d.tiene).length;
-        const presionBaja = data.filter(d => d.presion === 'BAJA_CARGA').length;
-
-        return [
-            { label: 'Total Registros', value: total, icon: 'clipboard' },
-            { label: 'Vencidos', value: vencidos, icon: 'alert-triangle', colorClass: 'bg-red-50 text-red-600' },
-            { label: 'Sin Extintor', value: sinExtintor, icon: 'x', colorClass: 'bg-orange-50 text-orange-600' },
-            { label: 'Presión Baja', value: presionBaja, icon: 'activity', colorClass: 'bg-yellow-50 text-yellow-600' },
-        ];
-    }, [data]);
-
-    // Chart Data
-    const chartData = useMemo(() => {
-        if (!data) return [];
-        const vigente = data.filter(d => d.certificacion === 'VIGENTE').length;
-        const vencida = data.filter(d => d.certificacion === 'VENCIDA').length;
-        return [
-            { name: 'VIGENTE', value: vigente, color: '#10b981' }, // Emerald-500
-            { name: 'VENCIDA', value: vencida, color: '#ef4444' }, // Red-500
-        ];
-    }, [data]);
-
-    // Columns
-    const columns: TableColumn<Extintor>[] = [
-        { key: 'bus_ppu', header: 'PPU', value: (row) => row.bus_ppu },
-        { key: 'terminal', header: 'Terminal', render: (row) => displayTerminal(row.terminal as any), value: (row) => row.terminal },
-        {
-            key: 'tiene',
-            header: 'Tiene',
-            render: (row) => (
-                <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${row.tiene ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                    {row.tiene ? 'SÍ' : 'NO'}
-                </span>
-            ),
-            value: (row) => row.tiene ? 'SI' : 'NO'
-        },
-        {
-            key: 'certificacion',
-            header: 'Certificación',
-            render: (row) => (
-                <span className={`text-xs font-bold ${row.certificacion === 'VIGENTE' ? 'text-green-600' : 'text-red-600'}`}>
-                    {row.certificacion || '-'}
-                </span>
-            ),
-            value: (row) => row.certificacion || '-'
-        },
-        {
-            key: 'vencimiento_mes',
-            header: 'Vencimiento',
-            render: (row) => row.vencimiento_mes && row.vencimiento_anio ? `${row.vencimiento_mes}/${row.vencimiento_anio}` : '-',
-            value: (row) => `${row.vencimiento_mes}/${row.vencimiento_anio}`
-        },
-        { key: 'presion', header: 'Presión', value: (row) => row.presion || '-' },
-        { key: 'cilindro', header: 'Cilindro OK', render: (row) => row.cilindro ? 'Sí' : 'No', value: (row) => row.cilindro ? 'Sí' : 'No' },
-        { key: 'updated_at', header: 'Actualizado', render: (row) => formatDate(row.updated_at), value: (row) => formatDate(row.updated_at) },
-    ];
-
-    const exportColumns = columns.map(c => ({ header: c.header, key: c.key, value: c.value }));
-
-    const handleExport = () => {
-        if (!data) return;
-        exportToXlsx({
-            filename: `minicheck_extintor_${new Date().toISOString().split('T')[0]}`,
-            sheetName: 'Extintores',
-            rows: data,
-            columns: exportColumns
-        });
-    };
-
-    return (
-        <div className="space-y-6">
-            <PageHeader
-                title="Control de Extintores"
-                description="Validación de estado y vencimiento de extintores"
-                actions={
-                    <div className="flex gap-2">
-                        <ExportMenu onExportView={handleExport} onExportAll={handleExport} />
-                    </div>
-                }
-            />
-
-            <FiltersComponent
-                terminalContext={terminalContext}
-                onTerminalChange={setTerminalContext}
-                search={search}
-                onSearchChange={setSearch}
-                dateFrom={dateFrom}
-                onDateFromChange={setDateFrom}
-                dateTo={dateTo}
-                onDateToChange={setDateTo}
-            />
-
-            {isLoading && <LoadingState label="Cargando extintores..." />}
-            {isError && <ErrorState message="No se pudieron obtener los registros de extintores." onRetry={refetch} />}
-
-            {!isLoading && !isError && (
-                <>
-                    <MiniCheckKpis items={kpis} />
-
-                    {/* Chart & Table Layout */}
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                        {/* Chart */}
-                        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm lg:col-span-1 h-80">
-                            <h3 className="text-sm font-bold text-slate-700 mb-4">Estado Certificación</h3>
-                            <ResponsiveContainer width="100%" height="100%">
-                                <BarChart data={chartData}>
-                                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                                    <XAxis dataKey="name" tick={{ fontSize: 10 }} />
-                                    <YAxis tick={{ fontSize: 10 }} />
-                                    <Tooltip />
-                                    <Bar dataKey="value" name="Cantidad" radius={[4, 4, 0, 0]}>
-                                        {chartData.map((entry, index) => (
-                                            <Cell key={`cell-${index}`} fill={entry.color} />
-                                        ))}
-                                    </Bar>
-                                </BarChart>
-                            </ResponsiveContainer>
-                        </div>
-
-                        {/* Table */}
-                        <div className="lg:col-span-2">
-                            {data && data.length > 0 ? (
-                                <DataTable columns={columns} rows={data} />
-                            ) : (
-                                <EmptyState label="Sin registros" description="No se encontraron extintores con los filtros seleccionados." />
-                            )}
-                        </div>
-                    </div>
-                </>
-            )}
-        </div>
-    );
+const toneForState = (value: string | null | undefined, okValue: string): StatusTone => {
+  if (!value) return 'neutral';
+  return value === okValue ? 'success' : 'danger';
 };
+
+const getIndicatorValues = (row: Extintor) => {
+  const unified = row.sonda_manometro ?? row['sonda/manometro'];
+  if (unified) return [{ label: 'Indicador', value: unified }];
+
+  return [
+    { label: 'Sonda', value: row.sonda },
+    { label: 'Manómetro', value: row.manometro },
+  ].filter((item) => item.value !== null && item.value !== undefined);
+};
+
+const hasTechnicalFinding = (row: Extintor): boolean =>
+  (row.presion !== null && row.presion !== 'OPTIMO') ||
+  (row.cilindro !== null && row.cilindro !== 'OK') ||
+  (row.porta !== null && row.porta !== 'TIENE') ||
+  getIndicatorValues(row).some((item) => item.value !== 'OK');
+
+const isIncomplete = (row: Extintor): boolean =>
+  row.tiene === null ||
+  (row.tiene === true &&
+    [row.certificacion, row.presion, row.cilindro, row.porta].some(
+      (value) => value === null || value === undefined,
+    ));
+
+const stateCell = (value: string | null | undefined, okValue: string) => (
+  <StatusPill tone={toneForState(value, okValue)}>
+    {value?.replaceAll('_', ' ') || 'Sin dato'}
+  </StatusPill>
+);
+
+const detailColumns: TableColumn<Extintor>[] = [
+  {
+    key: 'tiene',
+    header: 'Extintor',
+    render: (row) => (
+      <BooleanStatus value={row.tiene} trueLabel="Instalado" falseLabel="Ausente" />
+    ),
+    value: (row) => (row.tiene === null ? 'SIN DATO' : row.tiene ? 'INSTALADO' : 'AUSENTE'),
+  },
+  {
+    key: 'vencimiento',
+    header: 'Vencimiento',
+    value: (row) =>
+      row.vencimiento_mes && row.vencimiento_anio
+        ? `${String(row.vencimiento_mes).padStart(2, '0')}/${row.vencimiento_anio}`
+        : '—',
+  },
+  {
+    key: 'certificacion',
+    header: 'Certificación',
+    render: (row) => stateCell(row.certificacion, 'VIGENTE'),
+    value: (row) => row.certificacion || 'SIN DATO',
+  },
+  {
+    key: 'sonda_manometro',
+    header: 'Sonda / manómetro',
+    render: (row) => {
+      const values = getIndicatorValues(row);
+      if (values.length === 0) return <StatusPill>Sin dato</StatusPill>;
+      return (
+        <div className="flex flex-wrap gap-1.5">
+          {values.map((item) => (
+            <StatusPill key={item.label} tone={toneForState(item.value, 'OK')}>
+              {values.length > 1 ? `${item.label}: ` : ''}
+              {item.value?.replaceAll('_', ' ')}
+            </StatusPill>
+          ))}
+        </div>
+      );
+    },
+    value: (row) => {
+      const values = getIndicatorValues(row);
+      return values.length > 0
+        ? values.map((item) => `${item.label}: ${item.value}`).join(' · ')
+        : 'SIN DATO';
+    },
+  },
+  {
+    key: 'presion',
+    header: 'Presión',
+    render: (row) => stateCell(row.presion, 'OPTIMO'),
+    value: (row) => row.presion || 'SIN DATO',
+  },
+  {
+    key: 'cilindro',
+    header: 'Cilindro',
+    render: (row) => stateCell(row.cilindro, 'OK'),
+    value: (row) => row.cilindro || 'SIN DATO',
+  },
+  {
+    key: 'porta',
+    header: 'Porta extintor',
+    render: (row) => stateCell(row.porta, 'TIENE'),
+    value: (row) => row.porta || 'SIN DATO',
+  },
+];
+
+const getKpis = (rows: Extintor[]): KpiItem[] => [
+  { label: 'Registros', value: rows.length, icon: 'clipboard' },
+  {
+    label: 'Sin extintor',
+    value: rows.filter((row) => row.tiene === false).length,
+    icon: 'x-circle',
+    colorClass: 'bg-red-50 text-red-600',
+  },
+  {
+    label: 'Certificación vencida',
+    value: rows.filter((row) => row.certificacion === 'VENCIDA').length,
+    icon: 'alert-triangle',
+    colorClass: 'bg-orange-50 text-orange-600',
+  },
+  {
+    label: 'Hallazgo técnico',
+    value: rows.filter(hasTechnicalFinding).length,
+    icon: 'activity',
+    colorClass: 'bg-amber-50 text-amber-600',
+  },
+];
+
+const getDistribution = (rows: Extintor[]): DistributionItem[] => [
+  { name: 'Sin extintor', value: rows.filter((row) => row.tiene === false).length, color: '#ef4444' },
+  {
+    name: 'Cert. vencida',
+    value: rows.filter((row) => row.tiene !== false && row.certificacion === 'VENCIDA').length,
+    color: '#f97316',
+  },
+  {
+    name: 'Falla técnica',
+    value: rows.filter(
+      (row) => row.tiene !== false && row.certificacion !== 'VENCIDA' && hasTechnicalFinding(row),
+    ).length,
+    color: '#f59e0b',
+  },
+  {
+    name: 'Incompleto',
+    value: rows.filter(
+      (row) =>
+        row.tiene !== false &&
+        row.certificacion !== 'VENCIDA' &&
+        !hasTechnicalFinding(row) &&
+        isIncomplete(row),
+    ).length,
+    color: '#94a3b8',
+  },
+  {
+    name: 'Sin hallazgos',
+    value: rows.filter(
+      (row) =>
+        row.tiene === true &&
+        row.certificacion !== 'VENCIDA' &&
+        !hasTechnicalFinding(row) &&
+        !isIncomplete(row),
+    ).length,
+    color: '#10b981',
+  },
+];
+
+export const MiniCheckExtintorPage = () => (
+  <MiniCheckModulePage
+    moduleKey="extintores"
+    title="Revisión de extintores"
+    description="Vencimiento, certificación, presión, cilindro, indicadores y soporte."
+    sheetName="Extintores"
+    fetcher={fetchExtintores}
+    detailColumns={detailColumns}
+    getKpis={getKpis}
+    getDistribution={getDistribution}
+  />
+);

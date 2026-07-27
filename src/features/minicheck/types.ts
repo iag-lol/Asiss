@@ -1,78 +1,113 @@
-import { TerminalCode, TerminalContext } from '../../shared/types/terminal';
-
-// Common Interface
 export interface MiniCheckBase {
-  id: string; // Assuming UUID or BigInt as string
+  id: string;
   revision_id: string;
-  bus_ppu: string;
-  terminal: string; // Should be TerminalCode but might be string in DB
   created_at: string;
-  updated_at: string;
-  observacion?: string | null;
+  bus_ppu: string;
+  terminal: string;
+  observacion: string | null;
 }
 
-// Filters
 export interface MiniCheckFilters {
-  terminalContext?: TerminalContext;
+  terminal?: string;
   search?: string;
   dateFrom?: string;
   dateTo?: string;
-  sortBy?: 'updated_at' | 'bus_ppu' | 'terminal';
-  sortOrder?: 'asc' | 'desc';
 }
 
-// EXTINTOR
+export type NullableBoolean = boolean | null;
+
+export type MonitorEstado = 'FUNCIONA' | 'APAGADO' | 'CON_DAÑO' | 'SIN_SENAL';
+
+export interface CamarasDetalle {
+  monitorDetalle?: string | null;
+  camDelantera?: NullableBoolean;
+  camCabina?: NullableBoolean;
+  camInteriores?: NullableBoolean;
+  camTrasera?: NullableBoolean;
+  visiblesMonitor?: NullableBoolean;
+  activaReversa?: NullableBoolean;
+  activaPuertas?: NullableBoolean;
+  visiblesPuertasCerradas?: NullableBoolean;
+}
+
+export interface Camaras extends MiniCheckBase {
+  monitor_estado: MonitorEstado | null;
+  detalle: CamarasDetalle | null;
+}
+
+export interface Tag extends MiniCheckBase {
+  tiene: NullableBoolean;
+  serie: string | null;
+}
+
 export type CertificacionEstado = 'VIGENTE' | 'VENCIDA';
-export type PresionEstado = 'NORMAL' | 'BAJA_CARGA' | 'SOBRECARGA'; // Assumption based on 'BAJA_CARGA'
+export type LecturaIndicadorEstado = 'OK' | 'SIN_LECTURA' | 'FUERA_DE_RANGO';
+export type PresionEstado = 'OPTIMO' | 'BAJA_CARGA' | 'SOBRECARGA';
+export type CilindroEstado = 'OK' | 'ABOLLADO' | 'OXIDADO';
+export type PortaEstado = 'TIENE' | 'NO_TIENE' | 'DANADO';
 
 export interface Extintor extends MiniCheckBase {
-  tiene: boolean;
-  vencimiento_mes?: number;
-  vencimiento_anio?: number;
-  certificacion?: CertificacionEstado;
-  sonda?: boolean;
-  manometro?: boolean;
-  presion?: PresionEstado | string; // Relaxed type
-  cilindro?: boolean;
-  porta?: boolean;
+  tiene: NullableBoolean;
+  vencimiento_mes: number | null;
+  vencimiento_anio: number | null;
+  certificacion: CertificacionEstado | null;
+  sonda?: LecturaIndicadorEstado | null;
+  manometro?: LecturaIndicadorEstado | null;
+  sonda_manometro?: LecturaIndicadorEstado | null;
+  'sonda/manometro'?: LecturaIndicadorEstado | null;
+  presion: PresionEstado | null;
+  cilindro: CilindroEstado | null;
+  porta: PortaEstado | null;
 }
 
-// TAG
-export interface Tag extends MiniCheckBase {
-  tiene: boolean;
-  serie?: string;
-}
-
-// MOBILEYE
 export interface Mobileye extends MiniCheckBase {
-  bus_marca?: string;
-  alerta_izq?: boolean;
-  alerta_der?: boolean;
-  consola?: boolean;
-  sensor_frontal?: boolean;
-  sensor_izq?: boolean;
-  sensor_der?: boolean;
+  bus_marca: string | null;
+  alerta_izq: NullableBoolean;
+  alerta_der: NullableBoolean;
+  consola: NullableBoolean;
+  sensor_frontal: NullableBoolean;
+  sensor_izq: NullableBoolean;
+  sensor_der: NullableBoolean;
 }
 
-// ODOMETRO
 export type OdometroEstado = 'OK' | 'INCONSISTENTE' | 'NO_FUNCIONA';
 
 export interface Odometro extends MiniCheckBase {
-  lectura: number;
-  estado: OdometroEstado | string;
+  lectura: number | string;
+  estado: OdometroEstado | null;
 }
 
-// PUBLICIDAD
+export interface Rack extends MiniCheckBase {
+  tiene_disco_duro: NullableBoolean;
+  tiene_seguridad_extra: NullableBoolean;
+  tiene_candado: NullableBoolean;
+  cerraduras_buen_estado: NullableBoolean;
+  cantidad_cerraduras_esperada: number | null;
+}
+
+export interface PublicidadLado {
+  tiene: NullableBoolean;
+  danio: NullableBoolean;
+  residuos: NullableBoolean;
+  observacion: string | null;
+}
+
+export interface PublicidadDetalleLados {
+  izquierda?: PublicidadLado;
+  derecha?: PublicidadLado;
+  luneta?: PublicidadLado;
+}
+
 export interface Publicidad extends MiniCheckBase {
-  tiene: boolean;
-  danio?: boolean;
-  residuos?: boolean;
-  detalle_lados?: Record<string, any>; // JSONB
-  nombre_publicidad?: string;
+  tiene: NullableBoolean;
+  danio: NullableBoolean;
+  residuos: NullableBoolean;
+  nombre_publicidad: string | null;
+  detalle_lados: PublicidadDetalleLados | null;
 }
 
-// Response Wrapper for Lists
-export interface MiniCheckResponse<T> {
-  data: T[];
-  count: number | null;
+export interface Wifi extends MiniCheckBase {
+  ppu_visible: NullableBoolean;
+  bus_encendido: NullableBoolean;
+  tiene_internet: NullableBoolean;
 }
