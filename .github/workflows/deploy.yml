@@ -35,9 +35,9 @@ jobs:
           VITE_SUPABASE_URL: ${{ env.SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ env.SUPABASE_ANON_KEY }}
           VITE_EMAIL_API_URL: ${{ env.SUPABASE_URL }}/functions/v1/send-email
-          # MiniCheck usa la misma base de datos que el resto de la app
-          VITE_MINICHECK_SUPABASE_URL: ${{ env.SUPABASE_URL }}
-          VITE_MINICHECK_SUPABASE_ANON_KEY: ${{ env.SUPABASE_ANON_KEY }}
+          # MiniCheck usa credenciales independientes guardadas en Actions Secrets
+          VITE_MINICHECK_SUPABASE_URL: ${{ secrets.VITE_MINICHECK_SUPABASE_URL }}
+          VITE_MINICHECK_SUPABASE_ANON_KEY: ${{ secrets.VITE_MINICHECK_SUPABASE_ANON_KEY }}
 
       - name: Deploy
         uses: JamesIves/github-pages-deploy-action@v4
