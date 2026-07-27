@@ -28,6 +28,7 @@ import { MiniCheckOdometroPage } from '../../features/minicheck/sections/MiniChe
 import { MiniCheckRackPage } from '../../features/minicheck/sections/MiniCheckRackPage';
 import { MiniCheckWifiPage } from '../../features/minicheck/sections/MiniCheckWifiPage';
 import { MiniCheckPublicidadPage } from '../../features/minicheck/sections/MiniCheckPublicidadPage';
+import { MiniCheckDashboardPage } from '../../features/minicheck/sections/MiniCheckDashboardPage';
 
 const RequireSession = () => {
   const session = useSessionStore((state) => state.session);
@@ -71,7 +72,7 @@ export const AppRouter = () => (
           <Route path="/control-asiss/hhee" element={<ControlHHEEPage />} />
           <Route path="/control-asiss/exportes" element={<ExportesPage />} />
           <Route path="/mini-check" element={<MiniCheckLayout />}>
-            <Route index element={<Navigate to="/mini-check/camaras" replace />} />
+            <Route index element={<MiniCheckDashboardPage />} />
             <Route path="camaras" element={<MiniCheckCamarasPage />} />
             <Route path="tag" element={<MiniCheckTagPage />} />
             <Route path="extintores" element={<MiniCheckExtintorPage />} />

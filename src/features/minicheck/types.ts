@@ -8,6 +8,7 @@ export interface MiniCheckBase {
 }
 
 export interface MiniCheckFilters {
+  week?: string;
   terminal?: string;
   search?: string;
   dateFrom?: string;
@@ -110,4 +111,48 @@ export interface Wifi extends MiniCheckBase {
   ppu_visible: NullableBoolean;
   bus_encendido: NullableBoolean;
   tiene_internet: NullableBoolean;
+}
+
+export type BusOperationalStatus = 'OPERATIVO' | 'EN_PANNE';
+
+export interface Revision {
+  id: string;
+  created_at: string;
+  inspector_rut: string;
+  inspector_nombre: string;
+  terminal_detectado: string;
+  terminal_reportado: string;
+  bus_ppu: string;
+  bus_interno: string;
+  estado_bus: BusOperationalStatus;
+  lat: number | null;
+  lon: number | null;
+  observaciones: string | null;
+  semana_iso: string;
+  operativo: boolean;
+}
+
+export interface FleetBus {
+  id: string;
+  ppu: string;
+  numero_interno: string;
+  marca: string;
+  modelo: string | null;
+  anio: number | null;
+  terminal: string;
+}
+
+export type TicketStatus = 'PENDIENTE' | 'EN_PROCESO' | 'RESUELTO';
+export type TicketPriority = 'ALTA' | 'MEDIA' | 'BAJA';
+
+export interface MiniCheckTicket {
+  id?: string;
+  revision_id: string;
+  modulo: string;
+  estado: TicketStatus;
+  prioridad: TicketPriority;
+  descripcion: string;
+  terminal: string;
+  created_at: string;
+  actualizado_en: string | null;
 }

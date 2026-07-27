@@ -20,6 +20,7 @@ import { PageHeader } from '../../../shared/components/common/PageHeader';
 import { exportToXlsx } from '../../../shared/utils/exportToXlsx';
 import { showErrorToast, showSuccessToast } from '../../../shared/state/toastStore';
 import { isMiniCheckConfigured } from '../api/minicheckClient';
+import { useMiniCheckFilters } from '../context/MiniCheckFilterContext';
 import { MiniCheckBase, MiniCheckFilters } from '../types';
 import { MiniCheckFilters as Filters } from './MiniCheckFilters';
 import { KpiItem, MiniCheckKpis } from './MiniCheckKpis';
@@ -66,20 +67,18 @@ export const MiniCheckModulePage = <T extends MiniCheckBase>({
   getDistribution,
 }: Props<T>) => {
   const configured = isMiniCheckConfigured();
+  const { week } = useMiniCheckFilters();
   const [terminal, setTerminal] = useState('');
   const [search, setSearch] = useState('');
-  const [dateFrom, setDateFrom] = useState('');
-  const [dateTo, setDateTo] = useState('');
   const [exportingAll, setExportingAll] = useState(false);
 
   const filters = useMemo<MiniCheckFilters>(
     () => ({
+      week: week || undefined,
       terminal: terminal || undefined,
       search: search.trim() || undefined,
-      dateFrom: dateFrom || undefined,
-      dateTo: dateTo || undefined,
     }),
-    [dateFrom, dateTo, search, terminal],
+    [search, terminal, week],
   );
 
   const { data = [], isLoading, isFetching, isError, refetch } = useQuery({
@@ -139,7 +138,7 @@ export const MiniCheckModulePage = <T extends MiniCheckBase>({
 
   const exportRows = (rows: T[], suffix: string) => {
     exportToXlsx({
-      filename: `mini-check_${moduleKey}_${suffix}_${new Date().toISOString().slice(0, 10)}`,
+      filename: `mini-check_${moduleKey}_${week || 'historial'}_${suffix}_${new Date().toISOString().slice(0, 10)}`,
       sheetName,
       rows,
       columns: columns.map((column) => ({
@@ -202,10 +201,6 @@ export const MiniCheckModulePage = <T extends MiniCheckBase>({
         onTerminalChange={setTerminal}
         search={search}
         onSearchChange={setSearch}
-        dateFrom={dateFrom}
-        onDateFromChange={setDateFrom}
-        dateTo={dateTo}
-        onDateToChange={setDateTo}
       />
 
       {!configured && (

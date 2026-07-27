@@ -14,8 +14,10 @@ interface Props {
 }
 
 export const MiniCheckKpis = ({ items }: Props) => {
+    const columnClass = items.length >= 5 ? 'xl:grid-cols-5' : 'xl:grid-cols-4';
+
     return (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <div className={`grid grid-cols-1 gap-4 sm:grid-cols-2 ${columnClass}`}>
             {items.map((item, idx) => (
                 <div key={`${item.label}-${idx}`} className="flex items-start justify-between rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
                     <div>

@@ -13,10 +13,6 @@ interface Props {
   onTerminalChange: (value: string) => void;
   search: string;
   onSearchChange: (value: string) => void;
-  dateFrom: string;
-  onDateFromChange: (value: string) => void;
-  dateTo: string;
-  onDateToChange: (value: string) => void;
 }
 
 export const MiniCheckFilters = ({
@@ -24,18 +20,12 @@ export const MiniCheckFilters = ({
   onTerminalChange,
   search,
   onSearchChange,
-  dateFrom,
-  onDateFromChange,
-  dateTo,
-  onDateToChange,
 }: Props) => {
-  const hasFilters = Boolean(terminal || search || dateFrom || dateTo);
+  const hasFilters = Boolean(terminal || search);
 
   const clearFilters = () => {
     onTerminalChange('');
     onSearchChange('');
-    onDateFromChange('');
-    onDateToChange('');
   };
 
   return (
@@ -77,28 +67,6 @@ export const MiniCheckFilters = ({
               </option>
             ))}
           </select>
-        </label>
-
-        <label className="flex flex-col gap-1.5">
-          <span className="text-xs font-bold uppercase tracking-wider text-slate-500">Desde</span>
-          <input
-            type="date"
-            className="input py-2.5"
-            value={dateFrom}
-            max={dateTo || undefined}
-            onChange={(event) => onDateFromChange(event.target.value)}
-          />
-        </label>
-
-        <label className="flex flex-col gap-1.5">
-          <span className="text-xs font-bold uppercase tracking-wider text-slate-500">Hasta</span>
-          <input
-            type="date"
-            className="input py-2.5"
-            value={dateTo}
-            min={dateFrom || undefined}
-            onChange={(event) => onDateToChange(event.target.value)}
-          />
         </label>
 
         <button
