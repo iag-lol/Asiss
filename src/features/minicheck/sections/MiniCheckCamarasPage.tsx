@@ -4,6 +4,7 @@ import {
   DistributionItem,
   isPanneMarker,
   MiniCheckModulePage,
+  RowHealth,
 } from '../components/MiniCheckModulePage';
 import { BooleanStatus, StatusPill, StatusTone } from '../components/MiniCheckStatus';
 import { fetchCamaras } from '../api/minicheckApi';
@@ -138,6 +139,13 @@ const getDistribution = (rows: Camaras[]): DistributionItem[] => {
   ];
 };
 
+const getRowStatus = (row: Camaras): RowHealth => {
+  if (isPanneMarker(row)) return 'na';
+  if (hasFailure(row)) return 'danger';
+  if (row.monitor_estado === null) return 'unknown';
+  return 'ok';
+};
+
 export const MiniCheckCamarasPage = () => (
   <MiniCheckModulePage
     moduleKey="camaras"
@@ -148,5 +156,6 @@ export const MiniCheckCamarasPage = () => (
     detailColumns={detailColumns}
     getKpis={getKpis}
     getDistribution={getDistribution}
+    getRowStatus={getRowStatus}
   />
 );

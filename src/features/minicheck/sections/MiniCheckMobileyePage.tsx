@@ -1,7 +1,7 @@
 import { TableColumn } from '../../../shared/components/common/DataTable';
 import { fetchMobileye } from '../api/minicheckApi';
 import { KpiItem } from '../components/MiniCheckKpis';
-import { DistributionItem, MiniCheckModulePage } from '../components/MiniCheckModulePage';
+import { DistributionItem, MiniCheckModulePage, RowHealth } from '../components/MiniCheckModulePage';
 import { BooleanStatus } from '../components/MiniCheckStatus';
 import { Mobileye } from '../types';
 
@@ -78,6 +78,12 @@ const getDistribution = (rows: Mobileye[]): DistributionItem[] => [
   },
 ];
 
+const getRowStatus = (row: Mobileye): RowHealth => {
+  if (hasFailure(row)) return 'danger';
+  if (isIncomplete(row)) return 'unknown';
+  return 'ok';
+};
+
 export const MiniCheckMobileyePage = () => (
   <MiniCheckModulePage
     moduleKey="mobileye"
@@ -88,5 +94,6 @@ export const MiniCheckMobileyePage = () => (
     detailColumns={detailColumns}
     getKpis={getKpis}
     getDistribution={getDistribution}
+    getRowStatus={getRowStatus}
   />
 );

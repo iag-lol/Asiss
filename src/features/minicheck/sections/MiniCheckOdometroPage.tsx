@@ -5,6 +5,7 @@ import {
   DistributionItem,
   isPanneMarker,
   MiniCheckModulePage,
+  RowHealth,
 } from '../components/MiniCheckModulePage';
 import { StatusPill, StatusTone } from '../components/MiniCheckStatus';
 import { Odometro, OdometroEstado } from '../types';
@@ -95,6 +96,14 @@ const getDistribution = (rows: Odometro[]): DistributionItem[] => {
   ];
 };
 
+const getRowStatus = (row: Odometro): RowHealth => {
+  if (isPanneMarker(row)) return 'na';
+  if (row.estado === 'NO_FUNCIONA') return 'danger';
+  if (row.estado === 'INCONSISTENTE') return 'warning';
+  if (row.estado === 'OK') return 'ok';
+  return 'unknown';
+};
+
 export const MiniCheckOdometroPage = () => (
   <MiniCheckModulePage
     moduleKey="odometro"
@@ -105,5 +114,6 @@ export const MiniCheckOdometroPage = () => (
     detailColumns={detailColumns}
     getKpis={getKpis}
     getDistribution={getDistribution}
+    getRowStatus={getRowStatus}
   />
 );

@@ -1,7 +1,7 @@
 import { TableColumn } from '../../../shared/components/common/DataTable';
 import { fetchTags } from '../api/minicheckApi';
 import { KpiItem } from '../components/MiniCheckKpis';
-import { DistributionItem, MiniCheckModulePage } from '../components/MiniCheckModulePage';
+import { DistributionItem, MiniCheckModulePage, RowHealth } from '../components/MiniCheckModulePage';
 import { BooleanStatus } from '../components/MiniCheckStatus';
 import { Tag } from '../types';
 
@@ -52,6 +52,12 @@ const getDistribution = (rows: Tag[]): DistributionItem[] => [
   { name: 'Sin dato', value: rows.filter((row) => row.tiene === null).length, color: '#94a3b8' },
 ];
 
+const getRowStatus = (row: Tag): RowHealth => {
+  if (row.tiene === false) return 'danger';
+  if (row.tiene === null) return 'unknown';
+  return 'ok';
+};
+
 export const MiniCheckTagPage = () => (
   <MiniCheckModulePage
     moduleKey="tag"
@@ -62,5 +68,6 @@ export const MiniCheckTagPage = () => (
     detailColumns={detailColumns}
     getKpis={getKpis}
     getDistribution={getDistribution}
+    getRowStatus={getRowStatus}
   />
 );

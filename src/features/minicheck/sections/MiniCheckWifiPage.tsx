@@ -5,6 +5,7 @@ import {
   DistributionItem,
   isPanneMarker,
   MiniCheckModulePage,
+  RowHealth,
 } from '../components/MiniCheckModulePage';
 import { BooleanStatus, StatusPill } from '../components/MiniCheckStatus';
 import { Wifi } from '../types';
@@ -132,6 +133,21 @@ const getDistribution = (rows: Wifi[]): DistributionItem[] => [
   },
 ];
 
+const getRowStatus = (row: Wifi): RowHealth => {
+  switch (getResult(row)) {
+    case 'NO_APLICA':
+      return 'na';
+    case 'SIN_INTERNET':
+      return 'danger';
+    case 'NO_VISIBLE':
+      return 'warning';
+    case 'ONLINE':
+      return 'ok';
+    default:
+      return 'unknown';
+  }
+};
+
 export const MiniCheckWifiPage = () => (
   <MiniCheckModulePage
     moduleKey="wifi"
@@ -142,5 +158,6 @@ export const MiniCheckWifiPage = () => (
     detailColumns={detailColumns}
     getKpis={getKpis}
     getDistribution={getDistribution}
+    getRowStatus={getRowStatus}
   />
 );

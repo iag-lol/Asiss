@@ -1,7 +1,7 @@
 import { TableColumn } from '../../../shared/components/common/DataTable';
 import { fetchRack } from '../api/minicheckApi';
 import { KpiItem } from '../components/MiniCheckKpis';
-import { DistributionItem, MiniCheckModulePage } from '../components/MiniCheckModulePage';
+import { DistributionItem, MiniCheckModulePage, RowHealth } from '../components/MiniCheckModulePage';
 import { BooleanStatus } from '../components/MiniCheckStatus';
 import { Rack } from '../types';
 
@@ -118,6 +118,12 @@ const getDistribution = (rows: Rack[]): DistributionItem[] => [
   },
 ];
 
+const getRowStatus = (row: Rack): RowHealth => {
+  if (hasFailure(row)) return 'danger';
+  if (isIncomplete(row)) return 'unknown';
+  return 'ok';
+};
+
 export const MiniCheckRackPage = () => (
   <MiniCheckModulePage
     moduleKey="rack"
@@ -128,5 +134,6 @@ export const MiniCheckRackPage = () => (
     detailColumns={detailColumns}
     getKpis={getKpis}
     getDistribution={getDistribution}
+    getRowStatus={getRowStatus}
   />
 );

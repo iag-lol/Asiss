@@ -1,7 +1,7 @@
 import { TableColumn } from '../../../shared/components/common/DataTable';
 import { fetchExtintores } from '../api/minicheckApi';
 import { KpiItem } from '../components/MiniCheckKpis';
-import { DistributionItem, MiniCheckModulePage } from '../components/MiniCheckModulePage';
+import { DistributionItem, MiniCheckModulePage, RowHealth } from '../components/MiniCheckModulePage';
 import { BooleanStatus, StatusPill, StatusTone } from '../components/MiniCheckStatus';
 import { Extintor } from '../types';
 
@@ -166,6 +166,13 @@ const getDistribution = (rows: Extintor[]): DistributionItem[] => [
   },
 ];
 
+const getRowStatus = (row: Extintor): RowHealth => {
+  if (row.tiene === false || row.certificacion === 'VENCIDA') return 'danger';
+  if (hasTechnicalFinding(row)) return 'warning';
+  if (isIncomplete(row)) return 'unknown';
+  return 'ok';
+};
+
 export const MiniCheckExtintorPage = () => (
   <MiniCheckModulePage
     moduleKey="extintores"
@@ -176,5 +183,6 @@ export const MiniCheckExtintorPage = () => (
     detailColumns={detailColumns}
     getKpis={getKpis}
     getDistribution={getDistribution}
+    getRowStatus={getRowStatus}
   />
 );

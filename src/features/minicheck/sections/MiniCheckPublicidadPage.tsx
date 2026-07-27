@@ -1,7 +1,7 @@
 import { TableColumn } from '../../../shared/components/common/DataTable';
 import { fetchPublicidad } from '../api/minicheckApi';
 import { KpiItem } from '../components/MiniCheckKpis';
-import { DistributionItem, MiniCheckModulePage } from '../components/MiniCheckModulePage';
+import { DistributionItem, MiniCheckModulePage, RowHealth } from '../components/MiniCheckModulePage';
 import { BooleanStatus, StatusPill } from '../components/MiniCheckStatus';
 import { Publicidad, PublicidadLado } from '../types';
 
@@ -156,6 +156,12 @@ const getDistribution = (rows: Publicidad[]): DistributionItem[] => [
   },
 ];
 
+const getRowStatus = (row: Publicidad): RowHealth => {
+  if (row.danio === true) return 'danger';
+  if (row.residuos === true) return 'warning';
+  return 'ok';
+};
+
 export const MiniCheckPublicidadPage = () => (
   <MiniCheckModulePage
     moduleKey="publicidad"
@@ -166,5 +172,6 @@ export const MiniCheckPublicidadPage = () => (
     detailColumns={detailColumns}
     getKpis={getKpis}
     getDistribution={getDistribution}
+    getRowStatus={getRowStatus}
   />
 );
