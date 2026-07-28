@@ -1,16 +1,16 @@
 import { createClient } from '@supabase/supabase-js';
-import { normalizeSupabaseProjectUrl } from './supabaseConfig';
+import {
+    ASISS_SUPABASE_ANON_KEY,
+    ASISS_SUPABASE_URL,
+    normalizeSupabaseProjectUrl,
+} from './supabaseConfig';
 
-const supabaseUrl = normalizeSupabaseProjectUrl(import.meta.env.VITE_SUPABASE_URL);
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-
-if (!supabaseUrl || !supabaseAnonKey) {
-    console.warn('Supabase credentials not configured. Using mock mode.');
-}
+const supabaseUrl = normalizeSupabaseProjectUrl(ASISS_SUPABASE_URL);
+const supabaseAnonKey = ASISS_SUPABASE_ANON_KEY;
 
 export const supabase = createClient(
-    supabaseUrl || 'https://placeholder.supabase.co',
-    supabaseAnonKey || 'placeholder-key',
+    supabaseUrl,
+    supabaseAnonKey,
     {
         auth: {
             persistSession: false,

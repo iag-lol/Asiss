@@ -1,9 +1,11 @@
 import { EmailPayload, EmailService } from '../types/email';
-import { buildSupabaseFunctionsUrl } from '../lib/supabaseConfig';
+import {
+  ASISS_SUPABASE_ANON_KEY,
+  ASISS_SUPABASE_URL,
+  buildSupabaseFunctionsUrl,
+} from '../lib/supabaseConfig';
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL ?? '';
-const EMAIL_API_URL = import.meta.env.VITE_EMAIL_API_URL ?? (SUPABASE_URL ? `${buildSupabaseFunctionsUrl(SUPABASE_URL)}/send-email` : '/functions/v1/send-email');
-const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY ?? '';
+const EMAIL_API_URL = `${buildSupabaseFunctionsUrl(ASISS_SUPABASE_URL)}/send-email`;
 
 export const emailService: EmailService = {
   sendEmail: async (payload: EmailPayload) => {
@@ -11,8 +13,8 @@ export const emailService: EmailService = {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'apikey': SUPABASE_ANON_KEY,
-        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+        'apikey': ASISS_SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${ASISS_SUPABASE_ANON_KEY}`,
       },
       body: JSON.stringify(payload),
     });

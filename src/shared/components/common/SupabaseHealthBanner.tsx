@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
-import { buildSupabaseAuthUrl } from '../../lib/supabaseConfig';
-
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+import {
+    ASISS_SUPABASE_ANON_KEY,
+    ASISS_SUPABASE_URL,
+    buildSupabaseAuthUrl,
+} from '../../lib/supabaseConfig';
 
 type HealthState = 'checking' | 'ok' | 'invalid-key' | 'unreachable';
 
@@ -15,13 +16,9 @@ export const SupabaseHealthBanner = () => {
     const [state, setState] = useState<HealthState>('checking');
 
     useEffect(() => {
-        if (!supabaseUrl || !supabaseAnonKey) {
-            setState('invalid-key');
-            return;
-        }
         let cancelled = false;
-        fetch(`${buildSupabaseAuthUrl(supabaseUrl)}/health`, {
-            headers: { apikey: supabaseAnonKey },
+        fetch(`${buildSupabaseAuthUrl(ASISS_SUPABASE_URL)}/health`, {
+            headers: { apikey: ASISS_SUPABASE_ANON_KEY },
         })
             .then((res) => {
                 if (cancelled) return;
@@ -40,7 +37,7 @@ export const SupabaseHealthBanner = () => {
     return (
         <div className="fixed inset-x-0 top-0 z-[9999] bg-red-600 px-4 py-2 text-center text-sm font-semibold text-white shadow-lg">
             {state === 'invalid-key'
-                ? 'Sin conexión con la base de datos: la clave API de Supabase no es válida. Copia la clave vigente desde el panel de Supabase (Settings → API Keys) y actualiza VITE_SUPABASE_ANON_KEY.'
+                ? 'Sin conexión con la base de datos principal de Asiss: la clave API configurada en el código no es válida.'
                 : 'No se pudo contactar el servidor de Supabase. Verifica tu conexión a internet o que el proyecto no esté pausado.'}
         </div>
     );

@@ -16,7 +16,7 @@ Sistema de gestión de asistencia y operaciones.
 ## Configuración Mini-Check
 
 Mini-Check consume una instancia Supabase independiente de la base principal. Configura
-estas variables en el entorno de desarrollo y despliegue:
+estas variables en el entorno de desarrollo y, para GitHub Pages, en Actions Secrets:
 
 ```env
 VITE_MINICHECK_SUPABASE_URL=https://<proyecto-mini-check>.supabase.co
@@ -25,6 +25,10 @@ VITE_MINICHECK_SUPABASE_ANON_KEY=<anon-key-o-publishable-key>
 
 La aplicación no utiliza `VITE_SUPABASE_URL` ni `VITE_SUPABASE_ANON_KEY` como respaldo
 para este módulo, evitando consultas accidentales a la base ASISS.
+
+El resto de la aplicación usa exclusivamente el backend principal definido en
+`src/shared/lib/supabaseConfig.ts`. Las variables de Actions de MiniCheck no pueden
+reemplazar esa conexión global.
 
 Para recibir actualizaciones automáticas, habilita las tablas Mini-Check necesarias en
 la publicación Realtime de Supabase. La interfaz refleja el estado de la suscripción y
