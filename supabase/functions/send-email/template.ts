@@ -81,6 +81,14 @@ export const renderEmailTemplate = ({
 
   // Los cuerpos de ASISS Logística traen su propio encabezado: evita repetir el asunto.
   const bodyHasOwnHeader = trimmedBody.includes('ASISS_CARD_HEADER');
+  // Las notificaciones con tabla horizontal necesitan más de 600px: el contenedor se adapta
+  // al ancho real de la tabla en lugar de comprimirla (esa compresión deformaba el correo).
+  const bodyIsWideTable = trimmedBody.includes('ASISS_WIDE_TABLE');
+  const containerAttrs = bodyIsWideTable ? '' : ' width="100%"';
+  const containerStyle = bodyIsWideTable
+    ? 'width: auto; margin: 0 auto;'
+    : 'max-width: 600px; width: 100%; margin: 0 auto;';
+  const cardPadding = bodyIsWideTable ? '24px 20px 28px 20px' : '24px 24px 32px 24px';
   const year = new Date().getFullYear();
   const dateTime = new Date().toLocaleString('es-CL', {
     timeZone: 'America/Santiago',
@@ -119,7 +127,7 @@ export const renderEmailTemplate = ({
       <td align="center" style="padding: 24px 12px;">
         
         <!-- Container -->
-        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width: 600px; width: 100%; margin: 0 auto;">
+        <table role="presentation"${containerAttrs} cellspacing="0" cellpadding="0" border="0" style="${containerStyle}">
           
           <!-- Header -->
           <tr>
@@ -141,7 +149,7 @@ export const renderEmailTemplate = ({
           <!-- Main Card -->
           <tr>
             <td>
-              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);">
+              <table role="presentation"${containerAttrs} cellspacing="0" cellpadding="0" border="0" style="${bodyIsWideTable ? 'width: auto;' : 'width: 100%;'} background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);">
                 
                 <!-- Top Accent Line -->
                 <tr>
@@ -172,7 +180,7 @@ export const renderEmailTemplate = ({
                 
                 <!-- Card Body -->
                 <tr>
-                  <td style="padding: 24px 24px 32px 24px;">
+                  <td style="padding: ${cardPadding};">
 
                     <!-- Dynamic Body Content -->
                     <div style="color: #334155; font-size: 15px; line-height: 1.6;">

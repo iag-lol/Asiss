@@ -13,7 +13,7 @@ export type AsissEmailTone = 'status' | 'conflict';
 export interface AsissEmailColumn {
   key: string;
   label: string;
-  /** @deprecated El detalle se renderiza en filas verticales; el ancho ya no se usa. */
+  /** @deprecated El ancho se calcula en píxeles según el tipo de dato (getColumnPixelWidth). */
   width?: number;
   tone?: AsissEmailTone;
 }
@@ -41,9 +41,8 @@ const COLORS = {
   muted: '#68798f',
   hairline: '#e6ecf4',
   border: '#d9e2ee',
-  labelBg: '#f8fafd',
   headerBg: '#12304f',
-  headerMuted: '#a8c4e4',
+  headerRule: '#3a5a80',
 };
 
 const STATUS_MESSAGES: Record<string, string> = {
@@ -111,27 +110,29 @@ const normalizeRutForEmail = (value: string) => {
 
 const normalizedColumnToken = (value: string) => stripAccents(value).toLowerCase();
 
-/** Campos que siempre deben caber en una sola línea (fechas, horas, turnos, RUT). */
-const isSingleLineColumn = (column: AsissEmailColumn) => {
-  const token = `${normalizedColumnToken(column.key)} ${normalizedColumnToken(column.label)}`;
+const columnToken = (column: AsissEmailColumn) =>
+  `${normalizedColumnToken(column.key)} ${normalizedColumnToken(column.label)}`;
 
-  if (token.includes('colaborador') || token.includes('nombre') || token.includes('observacion')) {
-    return false;
-  }
+/** Las columnas de texto libre son las únicas que pueden envolver en varias líneas. */
+const isWrappingColumn = (column: AsissEmailColumn) => /observacion|motivo/.test(columnToken(column));
 
-  return (
-    normalizedColumnToken(column.key) === 'rut' ||
-    token.includes('rut') ||
-    token.includes('fecha') ||
-    token.includes('hora') ||
-    token.includes('turno') ||
-    token.includes('jornada') ||
-    token.includes('horario') ||
-    token.includes('dia') ||
-    token.includes('inicio') ||
-    token.includes('termino') ||
-    token.includes('vuelta')
-  );
+/**
+ * Ancho fijo en píxeles por columna. La tabla se arma con un ancho total explícito para que
+ * ningún cliente de correo pueda comprimirla al reenviar (era la causa de la deformación).
+ */
+const getColumnPixelWidth = (column: AsissEmailColumn) => {
+  const token = columnToken(column);
+
+  if (/\brut\b/.test(token)) return 94;
+  if (/colaborador|nombre/.test(token)) return 178;
+  if (/observacion|motivo/.test(token)) return 172;
+  if (/turno|jornada|horario/.test(token)) return 108;
+  if (/estado/.test(token)) return 104;
+  if (/fecha|\bdia\b|dias|inicio|termino|vuelta/.test(token)) return 96;
+  if (/hora/.test(token)) return 88;
+  if (/conflicto|validacion|documento/.test(token)) return 100;
+
+  return 92;
 };
 
 const textValue = (value: AsissEmailValue) => {
@@ -146,18 +147,6 @@ const renderValue = (value: AsissEmailValue) => {
   return renderTextWithBreaks(String(value));
 };
 
-/** 'FECHA DE\nSOLICITUD' -> 'Fecha de solicitud' | 'RUT' -> 'RUT' */
-const formatFieldLabel = (label: string) => {
-  const clean = normalizeWhitespace(label.replace(/[\r\n]+/g, ' '));
-  if (!clean) return '';
-  if (clean.length <= 3) return clean.toLocaleUpperCase('es-CL');
-
-  const isAllCaps = clean === clean.toLocaleUpperCase('es-CL');
-  if (!isAllCaps) return clean;
-
-  const lower = clean.toLocaleLowerCase('es-CL');
-  return lower.charAt(0).toLocaleUpperCase('es-CL') + lower.slice(1);
-};
 
 const parseDateValue = (value: string | Date) => {
   if (value instanceof Date) {
@@ -250,37 +239,45 @@ const getConflictTheme = (value: string) => {
   return null;
 };
 
-const renderDetailRow = (
-  column: AsissEmailColumn,
-  value: AsissEmailValue,
-  index: number
-) => {
-  const label = formatFieldLabel(column.label);
-  const isFirst = index === 0;
-  const topBorder = isFirst ? '0' : `1px solid ${COLORS.hairline}`;
-  const singleLine = isSingleLineColumn(column) ? 'white-space:nowrap;word-break:keep-all;' : 'word-break:break-word;';
+const renderHeaderCell = (column: AsissEmailColumn, isLast: boolean) => {
+  const width = getColumnPixelWidth(column);
+
+  return `
+            <td width="${width}" align="center" valign="middle" style="width:${width}px;background:${COLORS.headerBg};border-right:${isLast ? '0' : `1px solid ${COLORS.headerRule}`};padding:11px 8px;font-family:${FONT_STACK};font-size:9px;font-weight:800;letter-spacing:.5px;line-height:12px;color:#ffffff;text-transform:uppercase;text-align:center;vertical-align:middle;">
+              ${renderTextWithBreaks(column.label.toLocaleUpperCase('es-CL'))}
+            </td>`;
+};
+
+const renderValueCell = (column: AsissEmailColumn, value: AsissEmailValue, isLast: boolean) => {
+  const width = getColumnPixelWidth(column);
+  const wrapping = isWrappingColumn(column)
+    ? 'word-break:break-word;'
+    : 'white-space:nowrap;word-break:keep-all;';
 
   let renderedValue =
     normalizedColumnToken(column.key) === 'rut'
       ? escapeHtml(normalizeRutForEmail(textValue(value)))
       : renderValue(value);
 
-  if (column.tone === 'conflict') {
+  let background = '#ffffff';
+  let color = COLORS.ink;
+
+  if (column.tone === 'status') {
+    const theme = getStatusTheme(textValue(value));
+    background = theme.background;
+    color = theme.text;
+  } else if (column.tone === 'conflict') {
     const theme = getConflictTheme(textValue(value));
     if (theme) {
-      renderedValue = `<span style="display:inline-block;background:${theme.background};color:${theme.color};font-size:12px;font-weight:700;line-height:16px;padding:3px 9px;border-radius:4px;">${renderedValue}</span>`;
+      background = theme.background;
+      color = theme.color;
     }
   }
 
   return `
-        <tr>
-          <td width="38%" align="left" valign="top" style="width:38%;background:${COLORS.labelBg};border-top:${topBorder};border-right:1px solid ${COLORS.hairline};padding:10px 14px;font-family:${FONT_STACK};font-size:11px;font-weight:700;letter-spacing:.25px;line-height:16px;color:${COLORS.muted};text-align:left;vertical-align:top;">
-            ${escapeHtml(label)}
-          </td>
-          <td align="left" valign="top" style="border-top:${topBorder};padding:10px 14px;font-family:${FONT_STACK};font-size:13px;font-weight:700;line-height:18px;color:${COLORS.ink};text-align:left;vertical-align:top;${singleLine}">
-            ${renderedValue}
-          </td>
-        </tr>`;
+            <td width="${width}" align="center" valign="middle" style="width:${width}px;background:${background};border-right:${isLast ? '0' : `1px solid ${COLORS.hairline}`};padding:13px 8px;font-family:${FONT_STACK};font-size:11px;font-weight:700;line-height:15px;color:${color};text-align:center;vertical-align:middle;${wrapping}">
+              ${renderedValue}
+            </td>`;
 };
 
 export const buildAsissLogisticaEmail = ({
@@ -296,16 +293,13 @@ export const buildAsissLogisticaEmail = ({
   actionUrl,
   actionLabel = 'REVISAR SOLICITUD',
 }: BuildAsissLogisticaEmailInput) => {
-  const statusColumn = columns.find((column) => column.tone === 'status');
+  const visibleColumns = columns.filter((column) => hasAsissEmailValue(rowData[column.key]));
+
+  const statusColumn = visibleColumns.find((column) => column.tone === 'status');
   const statusText =
     (statusColumn ? textValue(rowData[statusColumn.key]) : '') || textValue(status) || 'Pendiente de autorización';
   const statusTheme = getStatusTheme(statusText || status);
   const safeStatusMessage = getStatusMessage(status, statusMessage);
-
-  // El estado se comunica en la banda superior: no se repite dentro del detalle.
-  const detailColumns = columns.filter(
-    (column) => column.tone !== 'status' && hasAsissEmailValue(rowData[column.key])
-  );
 
   const safeSentAt = formatEmailDateTime(sentAt ?? new Date());
   const safeUnitOrTerminal = textValue(unitOrTerminal || 'ASISS').toUpperCase();
@@ -315,22 +309,30 @@ export const buildAsissLogisticaEmail = ({
   const safeActionUrl = actionUrl && hasAsissEmailValue(actionUrl) ? String(actionUrl) : '';
   const safeActionLabel = textValue(actionLabel ?? 'REVISAR SOLICITUD') || 'REVISAR SOLICITUD';
 
-  const metaRows: Array<{ column: AsissEmailColumn; value: AsissEmailValue }> = [
-    { column: { key: 'registrado_por', label: 'Registrado por' }, value: safeRegisteredBy },
-    { column: { key: 'fecha_envio', label: 'Fecha de envío' }, value: safeSentAt },
-  ];
+  // Ancho total explícito: la tabla nunca se comprime, el cliente de correo desplaza en horizontal.
+  const tableWidth = visibleColumns.reduce((total, column) => total + getColumnPixelWidth(column), 0);
+  const lastIndex = visibleColumns.length - 1;
 
-  const detailRows = [
-    ...detailColumns.map((column) => ({ column, value: rowData[column.key] })),
-    ...metaRows,
-  ]
-    .map((row, index) => renderDetailRow(row.column, row.value, index))
+  const headerCells = visibleColumns
+    .map((column, index) => renderHeaderCell(column, index === lastIndex))
     .join('');
+
+  const valueCells = visibleColumns
+    .map((column, index) => renderValueCell(column, rowData[column.key], index === lastIndex))
+    .join('');
+
+  const metaLine = [
+    `Registrado por ${escapeHtml(safeRegisteredBy)}`,
+    `Fecha de envío ${escapeHtml(safeSentAt)}`,
+    safeRequestId ? `Solicitud N&deg; ${escapeHtml(safeRequestId)}` : '',
+  ]
+    .filter(Boolean)
+    .join(' &nbsp;&middot;&nbsp; ');
 
   const actionButton = safeActionUrl
     ? `
     <tr>
-      <td align="center" style="padding:20px 0 0 0;text-align:center;">
+      <td align="left" style="padding:18px 0 0 0;text-align:left;">
         <a href="${escapeHtml(safeActionUrl)}" target="_blank" style="background:#1f5fe7;color:#ffffff;display:inline-block;font-family:${FONT_STACK};font-size:12px;font-weight:800;letter-spacing:.6px;text-decoration:none;text-transform:uppercase;padding:12px 26px;border-radius:6px;">
           ${escapeHtml(safeActionLabel.toUpperCase())}
         </a>
@@ -338,42 +340,47 @@ export const buildAsissLogisticaEmail = ({
     </tr>`
     : '';
 
-  // El bloque trae su propio encabezado: el envoltorio omite el título duplicado.
-  return `<!--ASISS_CARD_HEADER-->
-  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%;border-collapse:collapse;font-family:${FONT_STACK};">
+  // Marcas para el envoltorio: trae su propio encabezado y necesita un contenedor ancho.
+  return `<!--ASISS_CARD_HEADER--><!--ASISS_WIDE_TABLE-->
+  <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="border-collapse:collapse;font-family:${FONT_STACK};">
 
-    <!-- Estado de la solicitud -->
+    <!-- Encabezado -->
     <tr>
-      <td style="padding:0 0 18px 0;">
-        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%;background:${statusTheme.background};border:1px solid ${statusTheme.border};border-left:4px solid ${statusTheme.accent};border-collapse:separate;border-spacing:0;border-radius:6px;">
-          <tr>
-            <td align="left" style="padding:13px 16px;text-align:left;font-family:${FONT_STACK};">
-              <span style="display:block;color:${statusTheme.text};font-size:12px;font-weight:800;letter-spacing:.7px;line-height:16px;text-transform:uppercase;">${escapeHtml(normalizeWhitespace(statusText))}</span>
-              <span style="display:block;margin-top:5px;color:${COLORS.muted};font-size:12px;font-weight:500;line-height:17px;">${escapeHtml(safeStatusMessage)}</span>
-            </td>
+      <td align="left" style="padding:0 0 14px 0;text-align:left;font-family:${FONT_STACK};">
+        <span style="display:block;color:${COLORS.muted};font-size:9px;font-weight:800;letter-spacing:1.1px;line-height:12px;text-transform:uppercase;">${escapeHtml(safeUnitOrTerminal)} &middot; NOTIFICACIÓN AUTOMÁTICA</span>
+        <span style="display:block;margin-top:4px;color:${COLORS.ink};font-size:17px;font-weight:800;letter-spacing:-.3px;line-height:22px;">${escapeHtml(safeTitle)}</span>
+      </td>
+    </tr>
+
+    <!-- Tabla de la solicitud -->
+    <tr>
+      <td style="padding:0;">
+        <table role="presentation" width="${tableWidth}" cellspacing="0" cellpadding="0" border="0" style="width:${tableWidth}px;min-width:${tableWidth}px;background:#ffffff;border:1px solid ${COLORS.border};border-collapse:collapse;">
+          <tr>${headerCells}
+          </tr>
+          <tr>${valueCells}
           </tr>
         </table>
       </td>
     </tr>
 
-    <!-- Detalle de la solicitud -->
+    <!-- Estado -->
     <tr>
-      <td style="padding:0;">
-        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%;background:#ffffff;border:1px solid ${COLORS.border};border-collapse:separate;border-spacing:0;border-radius:8px;overflow:hidden;">
+      <td style="padding:14px 0 0 0;">
+        <table role="presentation" width="${tableWidth}" cellspacing="0" cellpadding="0" border="0" style="width:${tableWidth}px;background:${statusTheme.background};border:1px solid ${statusTheme.border};border-left:4px solid ${statusTheme.accent};border-collapse:separate;border-spacing:0;">
           <tr>
-            <td colspan="2" align="left" style="background:${COLORS.headerBg};padding:13px 16px;text-align:left;font-family:${FONT_STACK};">
-              <span style="display:block;color:${COLORS.headerMuted};font-size:9px;font-weight:800;letter-spacing:1.1px;line-height:12px;text-transform:uppercase;">${escapeHtml(safeUnitOrTerminal)} &middot; NOTIFICACIÓN AUTOMÁTICA</span>
-              <span style="display:block;margin-top:4px;color:#ffffff;font-size:14px;font-weight:700;letter-spacing:-.1px;line-height:19px;">${escapeHtml(safeTitle)}</span>
+            <td align="left" style="padding:12px 16px;text-align:left;font-family:${FONT_STACK};">
+              <span style="color:${statusTheme.text};font-size:12px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;">${escapeHtml(normalizeWhitespace(statusText))}</span>
+              <span style="color:${COLORS.muted};font-size:12px;font-weight:500;">&nbsp;&nbsp;${escapeHtml(safeStatusMessage)}</span>
             </td>
-          </tr>${detailRows}
+          </tr>
         </table>
       </td>
     </tr>
 ${actionButton}
     <tr>
-      <td align="left" style="padding:16px 2px 0 2px;text-align:left;font-family:${FONT_STACK};font-size:10px;font-weight:600;line-height:15px;color:#96a5b8;">
-        ${safeRequestId ? `Solicitud N&deg; <span style="word-break:break-all;">${escapeHtml(safeRequestId)}</span><br>` : ''}
-        Notificación automática &middot; Sistema ASISS Logística
+      <td align="left" style="padding:14px 0 0 0;text-align:left;font-family:${FONT_STACK};font-size:10px;font-weight:600;line-height:15px;color:#96a5b8;">
+        ${metaLine}<br>Notificación automática &middot; Sistema ASISS Logística
       </td>
     </tr>
   </table>`;
