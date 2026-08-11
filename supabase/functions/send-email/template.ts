@@ -79,7 +79,8 @@ export const renderEmailTemplate = ({
     return trimmedBody;
   }
 
-  const terminals = terminalCodes?.length ? terminalCodes.join(', ') : 'Todos';
+  // Los cuerpos de ASISS Logística traen su propio encabezado: evita repetir el asunto.
+  const bodyHasOwnHeader = trimmedBody.includes('ASISS_CARD_HEADER');
   const year = new Date().getFullYear();
   const dateTime = new Date().toLocaleString('es-CL', {
     timeZone: 'America/Santiago',
@@ -149,65 +150,35 @@ export const renderEmailTemplate = ({
 
                 <!-- Card Header -->
                 <tr>
-                  <td style="padding: 32px 32px 0 32px; text-align: center;">
+                  <td style="padding: 28px 24px 0 24px; text-align: center;">
                     <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
                       <tr>
                         <td align="center">
                           <span style="display: inline-block; padding: 6px 16px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 100px; color: #64748b; font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;">${config.name}</span>
                         </td>
-                      </tr>
+                      </tr>${
+                        bodyHasOwnHeader
+                          ? ''
+                          : `
                       <tr>
                         <td align="center" style="padding-top: 16px;">
-                          <h1 style="margin: 0; color: #0f172a; font-size: 24px; font-weight: 800; line-height: 1.3; letter-spacing: -0.5px;">${subject}</h1>
+                          <h1 style="margin: 0; color: #0f172a; font-size: 22px; font-weight: 800; line-height: 1.3; letter-spacing: -0.5px;">${subject}</h1>
                         </td>
-                      </tr>
+                      </tr>`
+                      }
                     </table>
                   </td>
                 </tr>
                 
                 <!-- Card Body -->
                 <tr>
-                  <td style="padding: 24px 32px 40px 32px;">
-                    
+                  <td style="padding: 24px 24px 32px 24px;">
+
                     <!-- Dynamic Body Content -->
                     <div style="color: #334155; font-size: 15px; line-height: 1.6;">
                       ${body}
                     </div>
-                    
-                    <!-- Info Cards -->
-                    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin-top: 32px; border-top: 1px solid #f1f5f9; padding-top: 24px;">
-                      <tr>
-                        <td width="50%" style="padding-right: 8px; vertical-align: top;">
-                          <table role="presentation" cellspacing="0" cellpadding="0" border="0">
-                            <tr>
-                              <td style="padding-right: 8px; vertical-align: top; padding-top: 2px;">
-                                ${ICONS.building}
-                              </td>
-                              <td>
-                                <span style="display: block; font-size: 10px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px;">Terminales</span>
-                                <span style="display: block; font-size: 13px; font-weight: 600; color: #334155;">${terminals}</span>
-                              </td>
-                            </tr>
-                          </table>
-                        </td>
-                        <td width="50%" style="padding-left: 8px; vertical-align: top;">
-                          <table role="presentation" cellspacing="0" cellpadding="0" border="0">
-                            <tr>
-                              <td style="padding-right: 8px; vertical-align: top; padding-top: 2px;">
-                                ${ICONS.mail}
-                              </td>
-                              <td>
-                                <span style="display: block; font-size: 10px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px;">Audiencia</span>
-                                <span style="display: block; font-size: 13px; font-weight: 600; color: #334155;">${audience === 'manual' ? 'Directo' : audience === 'todos' ? 'General' : 'Por Terminal'}</span>
-                              </td>
-                            </tr>
-                          </table>
-                        </td>
-                      </tr>
-                    </table>
-                    
 
-                    
                   </td>
                 </tr>
                 
